@@ -221,7 +221,8 @@ class Main(QtWidgets.QMainWindow):
         """Open a file."""
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open", os.path.expanduser('~'),
-            "Markdown checklist files (*.checklist *.md *.mdown *.markdown)")
+            "Markdown checklist files (*.cheqlist *.checklist *.md "
+            "*.mdown *.markdown)")
 
         if not fname:
             return
@@ -234,7 +235,8 @@ class Main(QtWidgets.QMainWindow):
         """Save a file."""
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save", os.path.expanduser('~'),
-            "Markdown checklist files (*.checklist *.md *.mdown *.markdown)")
+            "Markdown checklist files (*.cheqlist *.checklist *.md "
+            "*.mdown *.markdown)")
 
         if not fname:
             return
