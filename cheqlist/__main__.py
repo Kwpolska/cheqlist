@@ -14,7 +14,7 @@ Run the app.
 from cheqlist.app import QtWidgets, Main
 import sys
 
-__all__ = ('main')
+__all__ = ('main',)
 
 
 def main():
