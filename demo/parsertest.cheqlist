@@ -1,0 +1,8 @@
+ - [ ] Item 1
+ - [x] Item 2
+ - [ ] Item 3
+ * [X] Item 4
+[*] Item 5
+[x] Item 6
+[ ] foo
+bar
