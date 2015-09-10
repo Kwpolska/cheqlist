@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.0
+# Cheqlist v0.1.1
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -221,7 +221,8 @@ class Main(QtWidgets.QMainWindow):
         """Open a file."""
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open", os.path.expanduser('~'),
-            "Markdown checklist files (*.checklist *.md *.mdown *.markdown)")
+            "Markdown checklist files (*.cheqlist *.checklist *.md "
+            "*.mdown *.markdown)")
 
         if not fname:
             return
@@ -234,7 +235,8 @@ class Main(QtWidgets.QMainWindow):
         """Save a file."""
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save", os.path.expanduser('~'),
-            "Markdown checklist files (*.checklist *.md *.mdown *.markdown)")
+            "Markdown checklist files (*.cheqlist *.checklist *.md "
+            "*.mdown *.markdown)")
 
         if not fname:
             return

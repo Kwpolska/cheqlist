@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.0
+# Cheqlist v0.1.1
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -14,7 +14,7 @@ Run the app.
 from cheqlist.app import QtWidgets, Main
 import sys
 
-__all__ = ('main')
+__all__ = ('main',)
 
 
 def main():

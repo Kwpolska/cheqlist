@@ -1,4 +1,5 @@
 graft cheqlist
 graft docs
+graft demo
 include README.rst AUTHORS LICENSE CHANGELOG.rst setup.py setup.cfg requirements.txt cheqlist.desktop
 global-exclude __pycache__ *.pyc
