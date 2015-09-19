@@ -44,6 +44,10 @@ class Main(QtWidgets.QMainWindow):
         self.toolBar.setIconSize(QtCore.QSize(16, 16))
         self.toolBar.setMovable(False)
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        menu = self.menuBar()
+        self.fileMenu = menu.addMenu("&File")
+        self.editMenu = menu.addMenu("&Edit")
+        #self.helpMenu = menu.addMenu("&Help")
 
         self.actionAdd = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("list-add"), "&Add", self, shortcut='Ctrl+T',
@@ -88,6 +92,18 @@ class Main(QtWidgets.QMainWindow):
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
         self.toolBar.addAction(self.actionClear)
+
+        self.fileMenu.addAction(self.actionOpen)
+        self.fileMenu.addAction(self.actionSave)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.actionQuit)
+
+        self.editMenu.addAction(self.actionAdd)
+        self.editMenu.addAction(self.actionDelete)
+        self.editMenu.addAction(self.actionClear)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionBold)
+        self.editMenu.addAction(self.actionItalic)
 
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
