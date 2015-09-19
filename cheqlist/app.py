@@ -53,8 +53,12 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("list-add"), "&Add", self, shortcut='Ctrl+T',
             toolTip="Add", triggered=self.addItemHandler)
 
+        self.actionEdit = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("edit-rename"), "&Edit", self,
+            shortcut='Ctrl+E', toolTip="Edit", triggered=self.editItemHandler)
+
         self.actionDelete = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("list-remove"), "&Delete selected", self,
+            QtGui.QIcon.fromTheme("list-remove"), "&Delete", self,
             shortcut='Delete', toolTip="Delete", triggered=self.delItemHandler)
 
         self.actionBold = QtWidgets.QAction(
@@ -76,8 +80,8 @@ class Main(QtWidgets.QMainWindow):
             shortcut='Ctrl+S', toolTip="Save", triggered=self.saveHandler)
 
         self.actionClear = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("edit-clear-list"), "Cl&ear", self,
-            shortcut='Ctrl+E', toolTip="Clear", triggered=self.clear)
+            QtGui.QIcon.fromTheme("edit-clear-list"), "Clea&r", self,
+            shortcut='Ctrl+R', toolTip="Clear", triggered=self.clear)
 
         self.actionQuit = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
@@ -99,6 +103,7 @@ class Main(QtWidgets.QMainWindow):
         self.fileMenu.addAction(self.actionQuit)
 
         self.editMenu.addAction(self.actionAdd)
+        self.editMenu.addAction(self.actionEdit)
         self.editMenu.addAction(self.actionDelete)
         self.editMenu.addAction(self.actionClear)
         self.editMenu.addSeparator()
@@ -201,6 +206,11 @@ class Main(QtWidgets.QMainWindow):
     def addItemHandler(self, event):
         """Add an empty item."""
         self.addItem('', True)
+
+    def editItemHandler(self, event):
+        """Edit the currently selected item."""
+        for i in self.tasklist.selectedItems():
+            self.tasklist.editItem(i)
 
     def delItemHandler(self, event):
         """Delete the currently selected item."""
