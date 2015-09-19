@@ -75,10 +75,9 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("edit-clear-list"), "Cl&ear", self,
             shortcut='Ctrl+E', toolTip="Clear", triggered=self.clear)
 
-        # self.actionQuit = QtWidgets.QAction(
-        #     QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
-        #     shortcut='Ctrl+Q', toolTip="Quit",
-        #     triggered=QtWidgets.qApp.quit)
+        self.actionQuit = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
+            shortcut='Ctrl+Q', toolTip="Quit", triggered=QtWidgets.qApp.quit)
 
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
