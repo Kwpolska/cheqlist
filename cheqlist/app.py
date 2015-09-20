@@ -87,6 +87,16 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
             shortcut='Ctrl+Q', toolTip="Quit", triggered=QtWidgets.qApp.quit)
 
+        self.actionCheckAll = QtWidgets.QAction("Check &All", self,
+            toolTip="Check all items in the list.", triggered=self.checkAll)
+
+        self.actionCheckNone = QtWidgets.QAction("&Uncheck All", self,
+            toolTip="Uncheck all items in the list.", triggered=self.checkNone)
+
+        self.actionCheckInvert = QtWidgets.QAction("In&vert Selection", self,
+            toolTip="Check all unchecked items and uncheck all "
+                    "checked items.", triggered=self.checkInvert)
+
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
         self.toolBar.addSeparator()
@@ -109,6 +119,10 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionCheckAll)
+        self.editMenu.addAction(self.actionCheckNone)
+        self.editMenu.addAction(self.actionCheckInvert)
 
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
@@ -312,3 +326,23 @@ class Main(QtWidgets.QMainWindow):
         """Update actions when the selection changes."""
         self.updateBoldAction()
         self.updateItalicAction()
+
+    def checkAll(self, event=None):
+        """Check all items (complete the list)."""
+        for item in self.items():
+            item.setCheckState(2)
+        self.updateUI()
+
+    def checkNone(self, event=None):
+        """Uncheck all items (reset the list)."""
+        for item in self.items():
+            item.setCheckState(0)
+
+    def checkInvert(self, event=None):
+        """Check all unchecked items, uncheck all checked items."""
+        for item in self.items():
+            if item.checkState() == 2:
+                item.setCheckState(0)
+            else:
+                item.setCheckState(2)
+        self.updateUI()
