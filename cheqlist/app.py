@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.1
+# Cheqlist v0.1.2
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -44,13 +44,21 @@ class Main(QtWidgets.QMainWindow):
         self.toolBar.setIconSize(QtCore.QSize(16, 16))
         self.toolBar.setMovable(False)
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        menu = self.menuBar()
+        self.fileMenu = menu.addMenu("&File")
+        self.editMenu = menu.addMenu("&Edit")
+        #self.helpMenu = menu.addMenu("&Help")
 
         self.actionAdd = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("list-add"), "&Add", self, shortcut='Ctrl+T',
             toolTip="Add", triggered=self.addItemHandler)
 
+        self.actionEdit = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("edit-rename"), "&Edit", self,
+            shortcut='Ctrl+E', toolTip="Edit", triggered=self.editItemHandler)
+
         self.actionDelete = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("list-remove"), "&Delete selected", self,
+            QtGui.QIcon.fromTheme("list-remove"), "&Delete", self,
             shortcut='Delete', toolTip="Delete", triggered=self.delItemHandler)
 
         self.actionBold = QtWidgets.QAction(
@@ -72,13 +80,22 @@ class Main(QtWidgets.QMainWindow):
             shortcut='Ctrl+S', toolTip="Save", triggered=self.saveHandler)
 
         self.actionClear = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("edit-clear-list"), "Cl&ear", self,
-            shortcut='Ctrl+E', toolTip="Clear", triggered=self.clear)
+            QtGui.QIcon.fromTheme("edit-clear-list"), "Clea&r", self,
+            shortcut='Ctrl+R', toolTip="Clear", triggered=self.clear)
 
-        # self.actionQuit = QtWidgets.QAction(
-        #     QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
-        #     shortcut='Ctrl+Q', toolTip="Quit",
-        #     triggered=QtWidgets.qApp.quit)
+        self.actionQuit = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
+            shortcut='Ctrl+Q', toolTip="Quit", triggered=QtWidgets.qApp.quit)
+
+        self.actionCheckAll = QtWidgets.QAction("Check &All", self,
+            toolTip="Check all items in the list.", triggered=self.checkAll)
+
+        self.actionCheckNone = QtWidgets.QAction("&Uncheck All", self,
+            toolTip="Uncheck all items in the list.", triggered=self.checkNone)
+
+        self.actionCheckInvert = QtWidgets.QAction("In&vert Selection", self,
+            toolTip="Check all unchecked items and uncheck all "
+                    "checked items.", triggered=self.checkInvert)
 
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
@@ -89,6 +106,23 @@ class Main(QtWidgets.QMainWindow):
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
         self.toolBar.addAction(self.actionClear)
+
+        self.fileMenu.addAction(self.actionOpen)
+        self.fileMenu.addAction(self.actionSave)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.actionQuit)
+
+        self.editMenu.addAction(self.actionAdd)
+        self.editMenu.addAction(self.actionEdit)
+        self.editMenu.addAction(self.actionDelete)
+        self.editMenu.addAction(self.actionClear)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionBold)
+        self.editMenu.addAction(self.actionItalic)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionCheckAll)
+        self.editMenu.addAction(self.actionCheckNone)
+        self.editMenu.addAction(self.actionCheckInvert)
 
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
@@ -186,6 +220,11 @@ class Main(QtWidgets.QMainWindow):
     def addItemHandler(self, event):
         """Add an empty item."""
         self.addItem('', True)
+
+    def editItemHandler(self, event):
+        """Edit the currently selected item."""
+        for i in self.tasklist.selectedItems():
+            self.tasklist.editItem(i)
 
     def delItemHandler(self, event):
         """Delete the currently selected item."""
@@ -287,3 +326,23 @@ class Main(QtWidgets.QMainWindow):
         """Update actions when the selection changes."""
         self.updateBoldAction()
         self.updateItalicAction()
+
+    def checkAll(self, event=None):
+        """Check all items (complete the list)."""
+        for item in self.items():
+            item.setCheckState(2)
+        self.updateUI()
+
+    def checkNone(self, event=None):
+        """Uncheck all items (reset the list)."""
+        for item in self.items():
+            item.setCheckState(0)
+
+    def checkInvert(self, event=None):
+        """Check all unchecked items, uncheck all checked items."""
+        for item in self.items():
+            if item.checkState() == 2:
+                item.setCheckState(0)
+            else:
+                item.setCheckState(2)
+        self.updateUI()
