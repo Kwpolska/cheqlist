@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.1
+# Cheqlist v0.1.2
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # All rights reserved.
@@ -42,7 +42,7 @@ A simple Qt checklist.
 from cheqlist.__main__ import main
 
 __title__ = 'Cheqlist'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Chris Warrick'
 __license__ = '3-clause BSD'
 __docformat__ = 'restructuredtext en'
