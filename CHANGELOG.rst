@@ -5,8 +5,8 @@ Appendix C. Changelog
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
-:Date: 2015-09-23
-:Version: 0.1.2
+:Date: 2015-09-26
+:Version: 0.1.3
 
 .. index:: CHANGELOG
 
@@ -18,6 +18,13 @@ More information can be found on GitHub in the `releases section
 
 Version History
 ===============
+
+0.1.3
+    * Remember last location used
+    * Add config file support
+    * Add logging
+    * Select newly added items (Ctrl+B/Ctrl+I will work, but will also clear the
+      text while editing)
 
 0.1.2
     * Add menu bar

@@ -4,8 +4,8 @@ Cheqlist.  A simple Qt checklist.
 :Info: This is the README file for Cheqlist.
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015, Chris Warrick.
-:Date: 2015-09-23
-:Version: 0.1.2
+:Date: 2015-09-26
+:Version: 0.1.3
 
 PURPOSE
 -------
