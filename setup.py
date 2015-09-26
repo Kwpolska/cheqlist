@@ -4,7 +4,7 @@ import io
 from setuptools import setup
 
 setup(name='cheqlist',
-      version='0.1.2',
+      version='0.1.3',
       description='A simple Qt checklist.',
       keywords='cheqlist',
       author='Chris Warrick',
@@ -24,7 +24,8 @@ setup(name='cheqlist',
                    'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.3',
-                   'Programming Language :: Python :: 3.4'],
+                   'Programming Language :: Python :: 3.4',
+                   'Programming Language :: Python :: 3.5'],
       packages=['cheqlist'],
       #requires=['stuff'],
       data_files=[('share/applications', ['cheqlist.desktop']),],
