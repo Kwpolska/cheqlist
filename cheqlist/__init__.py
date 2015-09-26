@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.2
+# Cheqlist v0.1.3
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # All rights reserved.
@@ -39,16 +39,78 @@ A simple Qt checklist.
 :License: BSD (see /LICENSE).
 """
 
-from cheqlist.__main__ import main
+import os
+import pkg_resources
+import io
+import logging
+import time
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 __title__ = 'Cheqlist'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 __author__ = 'Chris Warrick'
 __license__ = '3-clause BSD'
 __docformat__ = 'restructuredtext en'
 
 __all__ = ('main',)
 
+# Time
+_starttime = time.time()
+
 # import gettext
 # G = gettext.translation('Cheqlist', '/usr/share/locale', fallback='C')
 # _ = G.gettext
+
+# Config directory setup
+confhome = os.getenv('XDG_CONFIG_HOME')
+if confhome is None:
+    confhome = os.path.expanduser('~/.config/')
+
+kwdir = os.path.join(confhome, 'kwpolska')
+confdir = os.path.join(kwdir, 'cheqlist')
+confpath = os.path.join(confdir, 'cheqlist.ini')
+
+if not os.path.exists(confhome):
+    os.mkdir(confhome)
+
+if not os.path.exists(kwdir):
+    os.mkdir(kwdir)
+
+if not os.path.exists(confdir):
+    os.mkdir(confdir)
+
+# Logging configuration
+logging.basicConfig(format='%(asctime)-15s [%(levelname)-7s] '
+                    ':%(name)-10s: %(message)s',
+                    filename=os.path.join(confdir, 'cheqlist.log'),
+                    level=logging.DEBUG)
+log = logging.getLogger('cheqlist')
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(logging.Formatter('[%(levelname)-7s] '
+                     ':%(name)-10s: %(message)s'))
+logging.getLogger('').addHandler(console)
+log.info('*** Cheqlist v' + __version__)
+
+
+if not os.path.exists(confpath):
+    log.warn("cheqlist.ini does not exist, creating")
+    with open(confpath, 'wb') as fh:
+        fh.write(pkg_resources.resource_string(
+            'cheqlist', 'data/cheqlist.ini.skel'))
+
+# Configuration file support
+config = configparser.ConfigParser()
+config.read_string(pkg_resources.resource_string(
+            'cheqlist', 'data/cheqlist.ini.skel').decode('utf-8'))
+config.read([confpath], encoding='utf-8')
+log.info("Read config from cheqlist.ini")
+
+
+def config_write():
+    with io.open(confpath, 'w', encoding='utf-8') as fh:
+        config.write(fh)
+    log.info("Config written to cheqlist.ini")

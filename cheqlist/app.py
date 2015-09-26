@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.2
+# Cheqlist v0.1.3
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -13,6 +13,8 @@ The Cheqlist app.
 
 import os
 import io
+import time
+import cheqlist
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ('Main',)
@@ -47,7 +49,7 @@ class Main(QtWidgets.QMainWindow):
         menu = self.menuBar()
         self.fileMenu = menu.addMenu("&File")
         self.editMenu = menu.addMenu("&Edit")
-        #self.helpMenu = menu.addMenu("&Help")
+        # self.helpMenu = menu.addMenu("&Help")
 
         self.actionAdd = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("list-add"), "&Add", self, shortcut='Ctrl+T',
@@ -85,17 +87,19 @@ class Main(QtWidgets.QMainWindow):
 
         self.actionQuit = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
-            shortcut='Ctrl+Q', toolTip="Quit", triggered=QtWidgets.qApp.quit)
+            shortcut='Ctrl+Q', toolTip="Quit", triggered=self.quit)
 
-        self.actionCheckAll = QtWidgets.QAction("Check &All", self,
-            toolTip="Check all items in the list.", triggered=self.checkAll)
+        self.actionCheckAll = QtWidgets.QAction(
+            "Check &All", self, toolTip="Check all items in the list.",
+            triggered=self.checkAll)
 
-        self.actionCheckNone = QtWidgets.QAction("&Uncheck All", self,
-            toolTip="Uncheck all items in the list.", triggered=self.checkNone)
+        self.actionCheckNone = QtWidgets.QAction(
+            "&Uncheck All", self, toolTip="Uncheck all items in the list.",
+            triggered=self.checkNone)
 
-        self.actionCheckInvert = QtWidgets.QAction("In&vert Selection", self,
-            toolTip="Check all unchecked items and uncheck all "
-                    "checked items.", triggered=self.checkInvert)
+        self.actionCheckInvert = QtWidgets.QAction(
+            "In&vert Selection", self, toolTip="Check all unchecked items "
+            "and uncheck all checked items.", triggered=self.checkInvert)
 
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
@@ -138,6 +142,8 @@ class Main(QtWidgets.QMainWindow):
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
+        cheqlist.log.info("Startup finished in {0:0.2f} s".format(
+                          time.time() - cheqlist._starttime))
 
     # Item handling
     def items(self):
@@ -148,6 +154,7 @@ class Main(QtWidgets.QMainWindow):
     def clear(self, event=None):
         """Clear the task list."""
         self.tasklist.clear()
+        cheqlist.log.info("List cleared")
         self.updateUI()
 
     def addItem(self, text="New item", edit=False, checked=False, bold=False,
@@ -172,6 +179,7 @@ class Main(QtWidgets.QMainWindow):
             f.setItalic(True)
         item.setFont(f)
         if edit:
+            item.setSelected(True)
             self.tasklist.editItem(item)
         self.updateUI()
         return self.tasklist.row(item)
@@ -189,6 +197,7 @@ class Main(QtWidgets.QMainWindow):
             if f.italic():
                 asterisks += '*'
             yield fstr.format(x=x, asterisks=asterisks, text=i.text())
+        cheqlist.log.info("{0} tasks serialized".format(len(i)))
 
     def loadFromText(self, items):
         """Load items from a text file."""
@@ -215,6 +224,8 @@ class Main(QtWidgets.QMainWindow):
                 italic = True
                 i = i[1:-1].strip()
             self.addItem(i, False, checked, bold, italic)
+
+        cheqlist.log.info("{0} tasks loaded".format(len(i)))
 
     # Action handling
     def addItemHandler(self, event):
@@ -258,13 +269,23 @@ class Main(QtWidgets.QMainWindow):
 
     def openHandler(self, event):
         """Open a file."""
+        openmode = cheqlist.config.get('directories', 'open_from')
+        lastdir = cheqlist.config.get('directories', 'lastdir')
+        path = os.path.expanduser(cheqlist.config.get('directories', openmode))
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open", os.path.expanduser('~'),
+            self, "Open", path,
             "Markdown checklist files (*.cheqlist *.checklist *.md "
             "*.mdown *.markdown)")
 
         if not fname:
             return
+
+        newpath = os.path.dirname(fname)
+        if newpath == lastdir:
+            cheqlist.config.set('directories', 'lastdir', newpath)
+            cheqlist.config_write()
+
+        cheqlist.log.info("Opening file " + fname)
 
         with io.open(fname, 'r', encoding='utf-8') as fh:
             self.clear()
@@ -280,8 +301,41 @@ class Main(QtWidgets.QMainWindow):
         if not fname:
             return
 
+        cheqlist.log.info("Saving to file " + fname)
+
         with io.open(fname, 'w', encoding='utf-8') as fh:
             fh.writelines(self.serialize())
+
+    def quit(self, event=None):
+        """Display a message on quit via Ctrl+Q."""
+        cheqlist.log.info("*** Goodbye!")
+        QtWidgets.qApp.quit()
+
+    def closeEvent(self, event=None):
+        """Display a message on quit via the X button."""
+        cheqlist.log.info("*** Goodbye!")
+        super(Main, self).closeEvent(event)
+        QtWidgets.qApp.quit()
+
+    def checkAll(self, event=None):
+        """Check all items (complete the list)."""
+        for item in self.items():
+            item.setCheckState(2)
+        self.updateUI()
+
+    def checkNone(self, event=None):
+        """Uncheck all items (reset the list)."""
+        for item in self.items():
+            item.setCheckState(0)
+
+    def checkInvert(self, event=None):
+        """Check all unchecked items, uncheck all checked items."""
+        for item in self.items():
+            if item.checkState() == 2:
+                item.setCheckState(0)
+            else:
+                item.setCheckState(2)
+        self.updateUI()
 
     # UI functions and helpers
     def updateBoldAction(self):
@@ -326,23 +380,3 @@ class Main(QtWidgets.QMainWindow):
         """Update actions when the selection changes."""
         self.updateBoldAction()
         self.updateItalicAction()
-
-    def checkAll(self, event=None):
-        """Check all items (complete the list)."""
-        for item in self.items():
-            item.setCheckState(2)
-        self.updateUI()
-
-    def checkNone(self, event=None):
-        """Uncheck all items (reset the list)."""
-        for item in self.items():
-            item.setCheckState(0)
-
-    def checkInvert(self, event=None):
-        """Check all unchecked items, uncheck all checked items."""
-        for item in self.items():
-            if item.checkState() == 2:
-                item.setCheckState(0)
-            else:
-                item.setCheckState(2)
-        self.updateUI()
