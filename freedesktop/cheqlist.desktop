@@ -3,7 +3,7 @@
 Categories=Office;
 Comment[en_US]=A simple check list application.
 Comment=A simple check list application.
-Exec=cheqlist
+Exec=cheqlist %f
 GenericName[en_US]=Simple check list
 GenericName=Simple check list
 Icon=checkbox
@@ -17,7 +17,4 @@ TerminalOptions=
 TryExec=cheqlist
 Type=Application
 Version=1.0
-X-DBUS-ServiceName=
-X-DBUS-StartupType=
-X-KDE-SubstituteUID=false
-X-KDE-Username=
+MimeType=application/x-cheqlist;

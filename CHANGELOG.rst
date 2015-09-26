@@ -6,7 +6,7 @@ Appendix C. Changelog
 :Copyright: © 2015, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
 :Date: 2015-09-26
-:Version: 0.1.3
+:Version: 0.1.4
 
 .. index:: CHANGELOG
 
@@ -18,6 +18,9 @@ More information can be found on GitHub in the `releases section
 
 Version History
 ===============
+
+0.1.4
+    * Support opening files (requires MIME database update)
 
 0.1.3
     * Remember last location used
