@@ -193,6 +193,7 @@ class Main(QtWidgets.QMainWindow):
     def serialize(self):
         """Serialize a list into GitHub Flavored Markdown."""
         fstr = ' - [{x}] {asterisks}{text}{asterisks}\n'
+        done = 0
         for i in self.items():
             asterisks = ''
             x = 'x' if i.checkState() else ' '
@@ -202,7 +203,8 @@ class Main(QtWidgets.QMainWindow):
             if f.italic():
                 asterisks += '*'
             yield fstr.format(x=x, asterisks=asterisks, text=i.text())
-        cheqlist.log.info("{0} tasks serialized".format(len(i)))
+            done += 1
+        cheqlist.log.info("{0} tasks serialized".format(done))
 
     def loadFromText(self, items):
         """Load items from a text file."""
@@ -230,7 +232,7 @@ class Main(QtWidgets.QMainWindow):
                 i = i[1:-1].strip()
             self.addItem(i, False, checked, bold, italic)
 
-        cheqlist.log.info("{0} tasks loaded".format(len(i)))
+        cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
     # Action handling
     def addItemHandler(self, event):
