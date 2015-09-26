@@ -11,6 +11,7 @@ depends=('python' 'python-setuptools' 'python-pyqt5')
 options=(!emptydirs)
 source=("https://pypi.python.org/packages/source/${_pyname:0:1}/${_pyname}/${_pyname}-${pkgver}.tar.gz")
 md5sums=('90fd14fd33e05629c68ee08d867e5f60')
+install=cheqlist.install
 
 package() {
   cd "${srcdir}/${_pyname}-${pkgver}"
