@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.3
+# Cheqlist v0.1.4
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -12,6 +12,7 @@ The Cheqlist app.
 """
 
 import os
+import sys
 import io
 import time
 import cheqlist
@@ -131,9 +132,13 @@ class Main(QtWidgets.QMainWindow):
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
 
-        # sample items
-        self.addItem("Item 1")
-        self.addItem("Item 2")
+        if len(sys.argv) == 1:
+            # add sample items
+            self.addItem("Item 1")
+            self.addItem("Item 2")
+        else:
+            for a in sys.argv[1:]:
+                self.readFile(a, clear=False)
 
         self.setWindowTitle("Cheqlist")
         self.resize(220, 1000)
@@ -285,24 +290,39 @@ class Main(QtWidgets.QMainWindow):
             cheqlist.config.set('directories', 'lastdir', newpath)
             cheqlist.config_write()
 
-        cheqlist.log.info("Opening file " + fname)
+        self.readFile(fname)
 
-        with io.open(fname, 'r', encoding='utf-8') as fh:
+    def readFile(self, fname, clear=True):
+        """Read a file and load it."""
+        cheqlist.log.info("Opening file " + fname)
+        if clear:
             self.clear()
+        with io.open(fname, 'r', encoding='utf-8') as fh:
             self.loadFromText(fh.readlines())
 
     def saveHandler(self, event):
         """Save a file."""
+        openmode = cheqlist.config.get('directories', 'open_from')
+        lastdir = cheqlist.config.get('directories', 'lastdir')
+        path = os.path.expanduser(cheqlist.config.get('directories', openmode))
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save", os.path.expanduser('~'),
+            self, "Save", path,
             "Markdown checklist files (*.cheqlist *.checklist *.md "
             "*.mdown *.markdown)")
 
         if not fname:
             return
 
-        cheqlist.log.info("Saving to file " + fname)
+        newpath = os.path.dirname(fname)
+        if newpath == lastdir:
+            cheqlist.config.set('directories', 'lastdir', newpath)
+            cheqlist.config_write()
 
+        self.writeFile(fname)
+
+    def writeFile(self, fname):
+        """Serialize and write into a file."""
+        cheqlist.log.info("Saving to file " + fname)
         with io.open(fname, 'w', encoding='utf-8') as fh:
             fh.writelines(self.serialize())
 

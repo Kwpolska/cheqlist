@@ -5,7 +5,7 @@ Cheqlist.  A simple Qt checklist.
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015, Chris Warrick.
 :Date: 2015-09-26
-:Version: 0.1.3
+:Version: 0.1.4
 
 PURPOSE
 -------
@@ -20,6 +20,10 @@ INSTALLATION
     pip install cheqlist
 
 Make sure you have PyQt5 installed.  AUR package also available.
+
+If you are on Linux, run::
+
+    sudo update-mime-database /usr/share/mime
 
 FILE FORMAT
 -----------

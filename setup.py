@@ -4,7 +4,7 @@ import io
 from setuptools import setup
 
 setup(name='cheqlist',
-      version='0.1.3',
+      version='0.1.4',
       description='A simple Qt checklist.',
       keywords='cheqlist',
       author='Chris Warrick',
@@ -14,6 +14,7 @@ setup(name='cheqlist',
       long_description=io.open('./docs/README.rst', 'r', encoding='utf-8').read(),
       platforms='any',
       zip_safe=False,
+      include_package_data=True,
       # http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=['Development Status :: 3 - Alpha',
                    'Environment :: X11 Applications :: Qt',
@@ -27,8 +28,8 @@ setup(name='cheqlist',
                    'Programming Language :: Python :: 3.4',
                    'Programming Language :: Python :: 3.5'],
       packages=['cheqlist'],
-      #requires=['stuff'],
-      data_files=[('share/applications', ['cheqlist.desktop']),],
+      data_files=[('share/applications', ['freedesktop/cheqlist.desktop']),
+                  ('share/mime/packages', ['freedesktop/cheqlist.xml']),],
       entry_points={
           'gui_scripts': [
               'cheqlist = cheqlist.__main__:main',
