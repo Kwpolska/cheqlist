@@ -172,6 +172,7 @@ class Main(QtWidgets.QMainWindow):
             f.setItalic(True)
         item.setFont(f)
         if edit:
+            item.setSelected(True)
             self.tasklist.editItem(item)
         self.updateUI()
         return self.tasklist.row(item)
