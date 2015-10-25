@@ -288,7 +288,7 @@ class Main(QtWidgets.QMainWindow):
             return
 
         newpath = os.path.dirname(fname)
-        if newpath == lastdir:
+        if newpath != lastdir:
             cheqlist.config.set('directories', 'lastdir', newpath)
             cheqlist.config_write()
 
@@ -316,7 +316,7 @@ class Main(QtWidgets.QMainWindow):
             return
 
         newpath = os.path.dirname(fname)
-        if newpath == lastdir:
+        if newpath != lastdir:
             cheqlist.config.set('directories', 'lastdir', newpath)
             cheqlist.config_write()
 
