@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.5
+# Cheqlist v0.1.6
 # A simple Qt checklist.
 # Copyright © 2015, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -288,7 +288,7 @@ class Main(QtWidgets.QMainWindow):
             return
 
         newpath = os.path.dirname(fname)
-        if newpath == lastdir:
+        if newpath != lastdir:
             cheqlist.config.set('directories', 'lastdir', newpath)
             cheqlist.config_write()
 
@@ -316,7 +316,7 @@ class Main(QtWidgets.QMainWindow):
             return
 
         newpath = os.path.dirname(fname)
-        if newpath == lastdir:
+        if newpath != lastdir:
             cheqlist.config.set('directories', 'lastdir', newpath)
             cheqlist.config_write()
 

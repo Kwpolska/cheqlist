@@ -5,8 +5,8 @@ Appendix C. Changelog
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
-:Date: 2015-10-11
-:Version: 0.1.5
+:Date: 2015-10-25
+:Version: 0.1.6
 
 .. index:: CHANGELOG
 
@@ -18,6 +18,9 @@ More information can be found on GitHub in the `releases section
 
 Version History
 ===============
+
+0.1.6
+    * Fix updating last used directory
 
 0.1.5
     * Fix task counting in logs (prevents crash on write)

@@ -5,8 +5,8 @@ Appendix B. License for Cheqlist
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
-:Date: 2015-10-11
-:Version: 0.1.5
+:Date: 2015-10-25
+:Version: 0.1.6
 
 .. index:: LICENSE
 
