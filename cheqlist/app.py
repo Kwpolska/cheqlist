@@ -163,6 +163,9 @@ class Main(QtWidgets.QMainWindow):
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
         self.actionIgnoreStruckOut.setChecked(self.ignoreStruckOut)
+        self.tasklist.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tasklist.customContextMenuRequested.connect(
+            self.tasklistMenuHandler)
 
         for a in sys.argv[1:]:
             self.readFile(a, clear=False)
@@ -453,3 +456,19 @@ class Main(QtWidgets.QMainWindow):
         self.updateItalicAction()
         self.updateUnderlineAction()
         self.updateStrikeOutAction()
+
+
+    def tasklistMenuHandler(self, point):
+        """Show the right-click menu of a task list."""
+        pos = self.tasklist.mapToGlobal(point)
+        m = QtWidgets.QMenu()
+        if self.tasklist.count() == 0:
+            m.addAction(self.actionAdd)
+        else:
+            m.addAction(self.actionEdit)
+            m.addAction(self.actionDelete)
+            m.addAction(self.actionBold)
+            m.addAction(self.actionItalic)
+            m.addAction(self.actionUnderline)
+            m.addAction(self.actionStrikeOut)
+        m.exec(pos)
