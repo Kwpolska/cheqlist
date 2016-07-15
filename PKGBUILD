@@ -11,7 +11,6 @@ depends=('python' 'python-setuptools' 'python-pyqt5')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pyname:0:1}/${_pyname}/${_pyname}-${pkgver}.tar.gz")
 md5sums=('e52f2ddab005efd77990c42f5a554083')
-install=cheqlist.install
 
 package() {
   cd "${srcdir}/${_pyname}-${pkgver}"
