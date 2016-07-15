@@ -14,7 +14,8 @@ Utilties, mainly for parsing and file support.
 
 import cheqlist
 
-SERIALIZE_FSTR = ' - [{x}] {asterisks}{text}{asterisks}\n'
+SERIALIZE_FSTR = ' - [{x}] {markers}{text}{end_markers}\n'
+zwnj = '\u200C'
 
 def parse_lines(lines):
     """Parse lines into entries."""
@@ -29,6 +30,14 @@ def parse_lines(lines):
             checked = False
         bold = False
         italic = False
+        underline = False
+        strikethrough = False
+        if line.startswith('<u>'):
+            underline = True
+            line = line[3:-4].strip()
+        if line.startswith('~~'):
+            strikethrough = True
+            line = line[2:-2].strip()
         if line.startswith(('_**', '*__')):
             # mixed styles
             bold = True
@@ -40,21 +49,40 @@ def parse_lines(lines):
         if line.startswith(('*', '_')):
             italic = True
             line = line[1:-1].strip()
-        yield (line, checked, bold, italic)
+
+        # Remove ZWNJ (see below)
+        if line[0] == zwnj:
+            line = line[1:].strip()
+
+        yield (line, checked, bold, italic, underline, strikethrough)
 
 
 def serialize_qt(items, log=True):
     """Serialize a Qt item list into GitHub Flavored Markdown."""
     done = 0
     for i in items:
-        asterisks = ''
+        markers = ''
         x = 'x' if i.checkState() else ' '
         f = i.font()
         if f.bold():
-            asterisks += '**'
+            markers += '**'
         if f.italic():
-            asterisks += '*'
-        yield SERIALIZE_FSTR.format(x=x, asterisks=asterisks, text=i.text())
+            markers += '*'
+
+        end_markers = markers
+
+        if f.strikeOut():
+            markers = '~~' + markers
+            end_markers += '~~'
+        if f.underline():
+            markers = '<u>' + markers
+            end_markers += '</u>'
+
+        # Add ZWNJ to preserve non-markup text characters
+        text = i.text()
+        if text.startswith(('*', '~~', '<u>', '_')):
+            text = zwnj + text
+        yield SERIALIZE_FSTR.format(x=x, markers=markers, end_markers=end_markers, text=text)
         done += 1
     if log:
         cheqlist.log.info("{0} tasks serialized".format(done))

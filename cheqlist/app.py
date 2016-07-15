@@ -75,6 +75,16 @@ class Main(QtWidgets.QMainWindow):
             shortcut='Ctrl+I', toolTip="Italic", checkable=True,
             triggered=self.italicItemHandler)
 
+        self.actionUnderline = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("format-text-underline"), "&Underline", self,
+            shortcut='Ctrl+U', toolTip="Underline", checkable=True,
+            triggered=self.underlineItemHandler)
+
+        self.actionStrikethrough = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("format-text-strikethrough"), "&Strikethrough", self,
+            shortcut='Ctrl+Shift+L', toolTip="strikethrough", checkable=True,
+            triggered=self.strikethroughItemHandler)
+
         self.actionOpen = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("document-open"), "&Open", self,
             shortcut='Ctrl+O', toolTip="Open", triggered=self.openHandler)
@@ -108,6 +118,8 @@ class Main(QtWidgets.QMainWindow):
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionBold)
         self.toolBar.addAction(self.actionItalic)
+        self.toolBar.addAction(self.actionUnderline)
+        self.toolBar.addAction(self.actionStrikethrough)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
@@ -125,6 +137,8 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
+        self.editMenu.addAction(self.actionUnderline)
+        self.editMenu.addAction(self.actionStrikethrough)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionCheckAll)
         self.editMenu.addAction(self.actionCheckNone)
@@ -142,9 +156,7 @@ class Main(QtWidgets.QMainWindow):
                 self.readFile(a, clear=False)
 
         self.setWindowTitle("Cheqlist")
-        self.resize(220, 1000)
-        # self.setWindowOpacity(0.85)
-        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.resize(250, 1000)
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
@@ -164,7 +176,7 @@ class Main(QtWidgets.QMainWindow):
         self.updateUI()
 
     def addItem(self, text="New item", edit=False, checked=False, bold=False,
-                italic=False):
+                italic=False, underline=False, strikethrough=False):
         """Add an item to the task list."""
         item = QtWidgets.QListWidgetItem(text, self.tasklist)
         item.setFlags(QtCore.Qt.ItemIsSelectable |
@@ -183,6 +195,10 @@ class Main(QtWidgets.QMainWindow):
             f.setBold(True)
         if italic:
             f.setItalic(True)
+        if underline:
+            f.setUnderline(True)
+        if strikethrough:
+            f.setStrikeOut(True)
         item.setFont(f)
         if edit:
             item.setSelected(True)
@@ -194,8 +210,8 @@ class Main(QtWidgets.QMainWindow):
     def loadFromText(self, items):
         """Load items from a text file."""
 
-        for item, checked, bold, italic in utils.parse_lines(items):
-            self.addItem(item, False, checked, bold, italic)
+        for item, checked, bold, italic, underline, strikethrough in utils.parse_lines(items):
+            self.addItem(item, False, checked, bold, italic, underline, strikethrough)
 
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
@@ -237,6 +253,20 @@ class Main(QtWidgets.QMainWindow):
         for i in self.tasklist.selectedItems():
             f = i.font()
             f.setItalic(not f.italic())
+            i.setFont(f)
+
+    def underlineItemHandler(self, event):
+        """Toggle underline on an item."""
+        for i in self.tasklist.selectedItems():
+            f = i.font()
+            f.setUnderline(not f.underline())
+            i.setFont(f)
+
+    def strikethroughItemHandler(self, event):
+        """Toggle strikethrough on an item."""
+        for i in self.tasklist.selectedItems():
+            f = i.font()
+            f.setStrikeOut(not f.strikeOut())
             i.setFont(f)
 
     def openHandler(self, event):
@@ -341,6 +371,22 @@ class Main(QtWidgets.QMainWindow):
 
         self.actionItalic.setChecked(s)
 
+    def updateUnderlineAction(self):
+        """Set the underline action check status."""
+        s = False
+        for i in self.tasklist.selectedItems():
+            s = i.font().underline()
+
+        self.actionUnderline.setChecked(s)
+
+    def updateStrikethroughAction(self):
+        """Set the strikethrough action check status."""
+        s = False
+        for i in self.tasklist.selectedItems():
+            s = i.font().strikeOut()
+
+        self.actionStrikethrough.setChecked(s)
+
     def updateDisabledButtons(self):
         """Disable buttons if the list is empty."""
         if self.tasklist.count() == 0:
@@ -349,21 +395,28 @@ class Main(QtWidgets.QMainWindow):
             self.actionBold.setChecked(False)
             self.actionItalic.setEnabled(False)
             self.actionItalic.setChecked(False)
+            self.actionUnderline.setEnabled(False)
+            self.actionUnderline.setChecked(False)
+            self.actionStrikethrough.setEnabled(False)
+            self.actionStrikethrough.setChecked(False)
             self.progressBar.setEnabled(False)
         else:
             self.actionDelete.setEnabled(True)
             self.actionBold.setEnabled(True)
             self.actionItalic.setEnabled(True)
+            self.actionUnderline.setEnabled(True)
+            self.actionStrikethrough.setEnabled(True)
             self.progressBar.setEnabled(True)
 
     def updateUI(self):
         """Update all UI."""
         self.updateProgressBar()
-        self.updateBoldAction()
-        self.updateItalicAction()
+        self.selectionHandler()
         self.updateDisabledButtons()
 
     def selectionHandler(self):
         """Update actions when the selection changes."""
         self.updateBoldAction()
         self.updateItalicAction()
+        self.updateUnderlineAction()
+        self.updateStrikethroughAction()
