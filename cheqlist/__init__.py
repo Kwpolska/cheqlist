@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.6
+# Cheqlist v0.2.0
 # A simple Qt checklist.
-# Copyright © 2015, Chris Warrick.
+# Copyright © 2015-2016, Chris Warrick.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 """
 A simple Qt checklist.
 
-:Copyright: © 2015, Chris Warrick.
+:Copyright: © 2015-2016, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -50,7 +50,7 @@ except ImportError:
     import ConfigParser as configparser
 
 __title__ = 'Cheqlist'
-__version__ = '0.1.6'
+__version__ = '0.2.0'
 __author__ = 'Chris Warrick'
 __license__ = '3-clause BSD'
 __docformat__ = 'restructuredtext en'
@@ -72,6 +72,7 @@ if confhome is None:
 kwdir = os.path.join(confhome, 'kwpolska')
 confdir = os.path.join(kwdir, 'cheqlist')
 confpath = os.path.join(confdir, 'cheqlist.ini')
+logpath = os.path.join(confdir, 'cheqlist.log')
 
 if not os.path.exists(confhome):
     os.mkdir(confhome)
@@ -85,7 +86,7 @@ if not os.path.exists(confdir):
 # Logging configuration
 logging.basicConfig(format='%(asctime)-15s [%(levelname)-7s] '
                     ':%(name)-10s: %(message)s',
-                    filename=os.path.join(confdir, 'cheqlist.log'),
+                    filename=logpath,
                     level=logging.DEBUG)
 log = logging.getLogger('cheqlist')
 console = logging.StreamHandler()

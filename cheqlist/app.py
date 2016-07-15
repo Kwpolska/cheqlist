@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.6
+# Cheqlist v0.2.0
 # A simple Qt checklist.
-# Copyright © 2015, Chris Warrick.
+# Copyright © 2015-2016, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 The Cheqlist app.
 
-:Copyright: © 2015, Chris Warrick.
+:Copyright: © 2015-2016, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -16,6 +16,7 @@ import sys
 import io
 import time
 import cheqlist
+from cheqlist import utils
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ('Main',)
@@ -29,7 +30,8 @@ class Main(QtWidgets.QMainWindow):
         """Create the GUI."""
         super(Main, self).__init__()
         self.app = app
-        self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
+        self.ignoreStruckOut = cheqlist.config.getboolean('settings', 'ignore_struck_out')
+
         self.centralwidget = QtWidgets.QWidget(self)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.tasklist = QtWidgets.QListWidget(self.centralwidget)
@@ -45,8 +47,15 @@ class Main(QtWidgets.QMainWindow):
         self.setCentralWidget(self.centralwidget)
         self.toolBar = QtWidgets.QToolBar("Main", self)
         self.toolBar.setIconSize(QtCore.QSize(16, 16))
-        self.toolBar.setMovable(False)
+        self.toolBar.setFloatable(False)
+        self.toolBar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        self.editToolBar = QtWidgets.QToolBar("Edit", self)
+        self.editToolBar.setIconSize(QtCore.QSize(16, 16))
+        self.editToolBar.setFloatable(False)
+        self.editToolBar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.editToolBar)
+        self.insertToolBarBreak(self.editToolBar)
         menu = self.menuBar()
         self.fileMenu = menu.addMenu("&File")
         self.editMenu = menu.addMenu("&Edit")
@@ -73,6 +82,16 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("format-text-italic"), "&Italic", self,
             shortcut='Ctrl+I', toolTip="Italic", checkable=True,
             triggered=self.italicItemHandler)
+
+        self.actionUnderline = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("format-text-underline"), "&Underline", self,
+            shortcut='Ctrl+U', toolTip="Underline", checkable=True,
+            triggered=self.underlineItemHandler)
+
+        self.actionStrikeOut = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("format-text-strikethrough"), "&Strike Out",
+            self, shortcut='Ctrl+Alt+S', toolTip="Strike Out", checkable=True,
+            triggered=self.strikeOutItemHandler)
 
         self.actionOpen = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("document-open"), "&Open", self,
@@ -102,15 +121,23 @@ class Main(QtWidgets.QMainWindow):
             "In&vert Selection", self, toolTip="Check all unchecked items "
             "and uncheck all checked items.", triggered=self.checkInvert)
 
+        self.actionIgnoreStruckOut = QtWidgets.QAction(
+            "I&gnore struck out tasks", self, toolTip="Ignore tasks that are "
+            "struck out from counts", triggered=self.ignoreStruckOutHandler,
+            checkable=True)
+
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
-        self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionBold)
-        self.toolBar.addAction(self.actionItalic)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
         self.toolBar.addAction(self.actionClear)
+        self.toolBar.addAction(self.actionQuit)
+
+        self.editToolBar.addAction(self.actionBold)
+        self.editToolBar.addAction(self.actionItalic)
+        self.editToolBar.addAction(self.actionUnderline)
+        self.editToolBar.addAction(self.actionStrikeOut)
 
         self.fileMenu.addAction(self.actionOpen)
         self.fileMenu.addAction(self.actionSave)
@@ -124,26 +151,29 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
+        self.editMenu.addAction(self.actionUnderline)
+        self.editMenu.addAction(self.actionStrikeOut)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionCheckAll)
         self.editMenu.addAction(self.actionCheckNone)
         self.editMenu.addAction(self.actionCheckInvert)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionIgnoreStruckOut)
 
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
+        self.actionIgnoreStruckOut.setChecked(self.ignoreStruckOut)
+        self.tasklist.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tasklist.customContextMenuRequested.connect(
+            self.tasklistMenuHandler)
 
-        if len(sys.argv) == 1:
-            # add sample items
-            self.addItem("Item 1")
-            self.addItem("Item 2")
-        else:
-            for a in sys.argv[1:]:
-                self.readFile(a, clear=False)
+        for a in sys.argv[1:]:
+            self.readFile(a, clear=False)
 
+        self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
         self.setWindowTitle("Cheqlist")
-        self.resize(220, 1000)
-        # self.setWindowOpacity(0.85)
-        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.resize(250, 1000)
+        self.updateUI()
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
@@ -163,7 +193,7 @@ class Main(QtWidgets.QMainWindow):
         self.updateUI()
 
     def addItem(self, text="New item", edit=False, checked=False, bold=False,
-                italic=False):
+                italic=False, underline=False, strikeOut=False):
         """Add an item to the task list."""
         item = QtWidgets.QListWidgetItem(text, self.tasklist)
         item.setFlags(QtCore.Qt.ItemIsSelectable |
@@ -182,6 +212,10 @@ class Main(QtWidgets.QMainWindow):
             f.setBold(True)
         if italic:
             f.setItalic(True)
+        if underline:
+            f.setUnderline(True)
+        if strikeOut:
+            f.setStrikeOut(True)
         item.setFont(f)
         if edit:
             item.setSelected(True)
@@ -190,47 +224,13 @@ class Main(QtWidgets.QMainWindow):
         return self.tasklist.row(item)
 
     # File handling
-    def serialize(self):
-        """Serialize a list into GitHub Flavored Markdown."""
-        fstr = ' - [{x}] {asterisks}{text}{asterisks}\n'
-        done = 0
-        for i in self.items():
-            asterisks = ''
-            x = 'x' if i.checkState() else ' '
-            f = i.font()
-            if f.bold():
-                asterisks += '**'
-            if f.italic():
-                asterisks += '*'
-            yield fstr.format(x=x, asterisks=asterisks, text=i.text())
-            done += 1
-        cheqlist.log.info("{0} tasks serialized".format(done))
-
     def loadFromText(self, items):
         """Load items from a text file."""
-        for i in items:
-            i = i.strip()
-            if i.startswith(('- ', '* ')):
-                i = i[2:].strip()
-            if i.startswith('['):
-                checked = i[1] in ('x', 'X', '*')
-                i = i[3:].strip()
-            else:
-                checked = False
-            bold = False
-            italic = False
-            if i.startswith(('_**', '*__')):
-                # mixed styles
-                bold = True
-                italic = True
-                i = i[3:-3].strip()
-            if i.startswith(('**', '__')):
-                bold = True
-                i = i[2:-2].strip()
-            if i.startswith(('*', '_')):
-                italic = True
-                i = i[1:-1].strip()
-            self.addItem(i, False, checked, bold, italic)
+
+        for (item, checked, bold, italic, underline,
+             strikeOut) in utils.parse_lines(items):
+            self.addItem(item, False, checked, bold, italic, underline,
+                         strikeOut)
 
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
@@ -252,13 +252,20 @@ class Main(QtWidgets.QMainWindow):
 
     def updateProgressBar(self):
         """Update progress bar."""
+        done = 0
         count = self.tasklist.count()
-        value = 0
-        for i in self.items():
-            if i.checkState():
-                value += 1
+        if self.ignoreStruckOut:
+            for i in self.items():
+                if i.font().strikeOut():
+                    count -= 1
+                elif i.checkState():
+                    done += 1
+        else:
+            for i in self.items():
+                if i.checkState():
+                    done += 1
         self.progressBar.setMaximum(count)
-        self.progressBar.setValue(value)
+        self.progressBar.setValue(done)
 
     def boldItemHandler(self, event):
         """Toggle bold on an item."""
@@ -273,6 +280,22 @@ class Main(QtWidgets.QMainWindow):
             f = i.font()
             f.setItalic(not f.italic())
             i.setFont(f)
+
+    def underlineItemHandler(self, event):
+        """Toggle underline on an item."""
+        for i in self.tasklist.selectedItems():
+            f = i.font()
+            f.setUnderline(not f.underline())
+            i.setFont(f)
+
+    def strikeOutItemHandler(self, event):
+        """Toggle strike out on an item."""
+        for i in self.tasklist.selectedItems():
+            f = i.font()
+            f.setStrikeOut(not f.strikeOut())
+            i.setFont(f)
+        if self.ignoreStruckOut:
+            self.updateProgressBar()
 
     def openHandler(self, event):
         """Open a file."""
@@ -326,7 +349,7 @@ class Main(QtWidgets.QMainWindow):
         """Serialize and write into a file."""
         cheqlist.log.info("Saving to file " + fname)
         with io.open(fname, 'w', encoding='utf-8') as fh:
-            fh.writelines(self.serialize())
+            fh.writelines(utils.serialize_qt(self.items()))
 
     def quit(self, event=None):
         """Display a message on quit via Ctrl+Q."""
@@ -359,6 +382,14 @@ class Main(QtWidgets.QMainWindow):
                 item.setCheckState(2)
         self.updateUI()
 
+    def ignoreStruckOutHandler(self, event=None):
+        """Toggle the setting that ignores struck out events."""
+        self.ignoreStruckOut = self.actionIgnoreStruckOut.isChecked()
+        cheqlist.config.set("settings", "ignore_struck_out",
+                            utils.config_bool(self.ignoreStruckOut))
+        cheqlist.config_write()
+        self.updateProgressBar()
+
     # UI functions and helpers
     def updateBoldAction(self):
         """Set the bold action check status."""
@@ -376,6 +407,22 @@ class Main(QtWidgets.QMainWindow):
 
         self.actionItalic.setChecked(s)
 
+    def updateUnderlineAction(self):
+        """Set the underline action check status."""
+        s = False
+        for i in self.tasklist.selectedItems():
+            s = i.font().underline()
+
+        self.actionUnderline.setChecked(s)
+
+    def updateStrikeOutAction(self):
+        """Set the strike out action check status."""
+        s = False
+        for i in self.tasklist.selectedItems():
+            s = i.font().strikeOut()
+
+        self.actionStrikeOut.setChecked(s)
+
     def updateDisabledButtons(self):
         """Disable buttons if the list is empty."""
         if self.tasklist.count() == 0:
@@ -384,21 +431,44 @@ class Main(QtWidgets.QMainWindow):
             self.actionBold.setChecked(False)
             self.actionItalic.setEnabled(False)
             self.actionItalic.setChecked(False)
+            self.actionUnderline.setEnabled(False)
+            self.actionUnderline.setChecked(False)
+            self.actionStrikeOut.setEnabled(False)
+            self.actionStrikeOut.setChecked(False)
             self.progressBar.setEnabled(False)
         else:
             self.actionDelete.setEnabled(True)
             self.actionBold.setEnabled(True)
             self.actionItalic.setEnabled(True)
+            self.actionUnderline.setEnabled(True)
+            self.actionStrikeOut.setEnabled(True)
             self.progressBar.setEnabled(True)
 
     def updateUI(self):
         """Update all UI."""
         self.updateProgressBar()
-        self.updateBoldAction()
-        self.updateItalicAction()
+        self.selectionHandler()
         self.updateDisabledButtons()
 
     def selectionHandler(self):
         """Update actions when the selection changes."""
         self.updateBoldAction()
         self.updateItalicAction()
+        self.updateUnderlineAction()
+        self.updateStrikeOutAction()
+
+
+    def tasklistMenuHandler(self, point):
+        """Show the right-click menu of a task list."""
+        pos = self.tasklist.mapToGlobal(point)
+        m = QtWidgets.QMenu()
+        if self.tasklist.count() == 0:
+            m.addAction(self.actionAdd)
+        else:
+            m.addAction(self.actionEdit)
+            m.addAction(self.actionDelete)
+            m.addAction(self.actionBold)
+            m.addAction(self.actionItalic)
+            m.addAction(self.actionUnderline)
+            m.addAction(self.actionStrikeOut)
+        m.exec(pos)
