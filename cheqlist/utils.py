@@ -17,6 +17,7 @@ import cheqlist
 SERIALIZE_FSTR = ' - [{x}] {markers}{text}{end_markers}\n'
 zwnj = '\u200C'
 
+
 def parse_lines(lines):
     """Parse lines into entries."""
     for line in lines:
@@ -31,12 +32,12 @@ def parse_lines(lines):
         bold = False
         italic = False
         underline = False
-        strikethrough = False
+        strikeOut = False
         if line.startswith('<u>'):
             underline = True
             line = line[3:-4].strip()
         if line.startswith('~~'):
-            strikethrough = True
+            strikeOut = True
             line = line[2:-2].strip()
         if line.startswith(('_**', '*__')):
             # mixed styles
@@ -54,7 +55,7 @@ def parse_lines(lines):
         if line[0] == zwnj:
             line = line[1:].strip()
 
-        yield (line, checked, bold, italic, underline, strikethrough)
+        yield (line, checked, bold, italic, underline, strikeOut)
 
 
 def serialize_qt(items, log=True):
@@ -86,3 +87,8 @@ def serialize_qt(items, log=True):
         done += 1
     if log:
         cheqlist.log.info("{0} tasks serialized".format(done))
+
+
+def config_bool(value):
+    """Represent a boolean in a way compatible with configparser."""
+    return "true" if value else "false"

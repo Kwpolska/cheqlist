@@ -30,7 +30,8 @@ class Main(QtWidgets.QMainWindow):
         """Create the GUI."""
         super(Main, self).__init__()
         self.app = app
-        self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
+        self.ignoreStruckOut = cheqlist.config.getboolean('settings', 'ignore_struck_out')
+
         self.centralwidget = QtWidgets.QWidget(self)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.tasklist = QtWidgets.QListWidget(self.centralwidget)
@@ -87,10 +88,10 @@ class Main(QtWidgets.QMainWindow):
             shortcut='Ctrl+U', toolTip="Underline", checkable=True,
             triggered=self.underlineItemHandler)
 
-        self.actionStrikethrough = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("format-text-strikethrough"), "&Strikethrough", self,
-            shortcut='Ctrl+Shift+L', toolTip="strikethrough", checkable=True,
-            triggered=self.strikethroughItemHandler)
+        self.actionStrikeOut = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("format-text-strikethrough"), "&Strike Out",
+            self, shortcut='Ctrl+Alt+S', toolTip="Strike Out", checkable=True,
+            triggered=self.strikeOutItemHandler)
 
         self.actionOpen = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("document-open"), "&Open", self,
@@ -120,16 +121,23 @@ class Main(QtWidgets.QMainWindow):
             "In&vert Selection", self, toolTip="Check all unchecked items "
             "and uncheck all checked items.", triggered=self.checkInvert)
 
+        self.actionIgnoreStruckOut = QtWidgets.QAction(
+            "I&gnore struck out tasks", self, toolTip="Ignore tasks that are "
+            "struck out from counts", triggered=self.ignoreStruckOutHandler,
+            checkable=True)
+
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
         self.toolBar.addAction(self.actionClear)
+        self.toolBar.addAction(self.actionQuit)
+
         self.editToolBar.addAction(self.actionBold)
         self.editToolBar.addAction(self.actionItalic)
         self.editToolBar.addAction(self.actionUnderline)
-        self.editToolBar.addAction(self.actionStrikethrough)
+        self.editToolBar.addAction(self.actionStrikeOut)
 
         self.fileMenu.addAction(self.actionOpen)
         self.fileMenu.addAction(self.actionSave)
@@ -144,20 +152,25 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
         self.editMenu.addAction(self.actionUnderline)
-        self.editMenu.addAction(self.actionStrikethrough)
+        self.editMenu.addAction(self.actionStrikeOut)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionCheckAll)
         self.editMenu.addAction(self.actionCheckNone)
         self.editMenu.addAction(self.actionCheckInvert)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionIgnoreStruckOut)
 
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
+        self.actionIgnoreStruckOut.setChecked(self.ignoreStruckOut)
 
         for a in sys.argv[1:]:
             self.readFile(a, clear=False)
 
+        self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
         self.setWindowTitle("Cheqlist")
         self.resize(250, 1000)
+        self.updateUI()
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
@@ -177,7 +190,7 @@ class Main(QtWidgets.QMainWindow):
         self.updateUI()
 
     def addItem(self, text="New item", edit=False, checked=False, bold=False,
-                italic=False, underline=False, strikethrough=False):
+                italic=False, underline=False, strikeOut=False):
         """Add an item to the task list."""
         item = QtWidgets.QListWidgetItem(text, self.tasklist)
         item.setFlags(QtCore.Qt.ItemIsSelectable |
@@ -198,7 +211,7 @@ class Main(QtWidgets.QMainWindow):
             f.setItalic(True)
         if underline:
             f.setUnderline(True)
-        if strikethrough:
+        if strikeOut:
             f.setStrikeOut(True)
         item.setFont(f)
         if edit:
@@ -211,8 +224,10 @@ class Main(QtWidgets.QMainWindow):
     def loadFromText(self, items):
         """Load items from a text file."""
 
-        for item, checked, bold, italic, underline, strikethrough in utils.parse_lines(items):
-            self.addItem(item, False, checked, bold, italic, underline, strikethrough)
+        for (item, checked, bold, italic, underline,
+             strikeOut) in utils.parse_lines(items):
+            self.addItem(item, False, checked, bold, italic, underline,
+                         strikeOut)
 
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
@@ -234,13 +249,20 @@ class Main(QtWidgets.QMainWindow):
 
     def updateProgressBar(self):
         """Update progress bar."""
+        done = 0
         count = self.tasklist.count()
-        value = 0
-        for i in self.items():
-            if i.checkState():
-                value += 1
+        if self.ignoreStruckOut:
+            for i in self.items():
+                if i.font().strikeOut():
+                    count -= 1
+                elif i.checkState():
+                    done += 1
+        else:
+            for i in self.items():
+                if i.checkState():
+                    done += 1
         self.progressBar.setMaximum(count)
-        self.progressBar.setValue(value)
+        self.progressBar.setValue(done)
 
     def boldItemHandler(self, event):
         """Toggle bold on an item."""
@@ -263,12 +285,14 @@ class Main(QtWidgets.QMainWindow):
             f.setUnderline(not f.underline())
             i.setFont(f)
 
-    def strikethroughItemHandler(self, event):
-        """Toggle strikethrough on an item."""
+    def strikeOutItemHandler(self, event):
+        """Toggle strike out on an item."""
         for i in self.tasklist.selectedItems():
             f = i.font()
             f.setStrikeOut(not f.strikeOut())
             i.setFont(f)
+        if self.ignoreStruckOut:
+            self.updateProgressBar()
 
     def openHandler(self, event):
         """Open a file."""
@@ -355,6 +379,14 @@ class Main(QtWidgets.QMainWindow):
                 item.setCheckState(2)
         self.updateUI()
 
+    def ignoreStruckOutHandler(self, event=None):
+        """Toggle the setting that ignores struck out events."""
+        self.ignoreStruckOut = self.actionIgnoreStruckOut.isChecked()
+        cheqlist.config.set("settings", "ignore_struck_out",
+                            utils.config_bool(self.ignoreStruckOut))
+        cheqlist.config_write()
+        self.updateProgressBar()
+
     # UI functions and helpers
     def updateBoldAction(self):
         """Set the bold action check status."""
@@ -380,13 +412,13 @@ class Main(QtWidgets.QMainWindow):
 
         self.actionUnderline.setChecked(s)
 
-    def updateStrikethroughAction(self):
-        """Set the strikethrough action check status."""
+    def updateStrikeOutAction(self):
+        """Set the strike out action check status."""
         s = False
         for i in self.tasklist.selectedItems():
             s = i.font().strikeOut()
 
-        self.actionStrikethrough.setChecked(s)
+        self.actionStrikeOut.setChecked(s)
 
     def updateDisabledButtons(self):
         """Disable buttons if the list is empty."""
@@ -398,15 +430,15 @@ class Main(QtWidgets.QMainWindow):
             self.actionItalic.setChecked(False)
             self.actionUnderline.setEnabled(False)
             self.actionUnderline.setChecked(False)
-            self.actionStrikethrough.setEnabled(False)
-            self.actionStrikethrough.setChecked(False)
+            self.actionStrikeOut.setEnabled(False)
+            self.actionStrikeOut.setChecked(False)
             self.progressBar.setEnabled(False)
         else:
             self.actionDelete.setEnabled(True)
             self.actionBold.setEnabled(True)
             self.actionItalic.setEnabled(True)
             self.actionUnderline.setEnabled(True)
-            self.actionStrikethrough.setEnabled(True)
+            self.actionStrikeOut.setEnabled(True)
             self.progressBar.setEnabled(True)
 
     def updateUI(self):
@@ -420,4 +452,4 @@ class Main(QtWidgets.QMainWindow):
         self.updateBoldAction()
         self.updateItalicAction()
         self.updateUnderlineAction()
-        self.updateStrikethroughAction()
+        self.updateStrikeOutAction()
