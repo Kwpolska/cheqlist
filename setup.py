@@ -4,7 +4,7 @@ import io
 from setuptools import setup
 
 setup(name='cheqlist',
-      version='0.1.6',
+      version='0.2.0',
       description='A simple Qt checklist.',
       keywords='cheqlist',
       author='Chris Warrick',

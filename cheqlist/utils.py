@@ -1,6 +1,6 @@
 
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.1.6
+# Cheqlist v0.2.0
 # A simple Qt checklist.
 # Copyright © 2015-2016, Chris Warrick.
 # See /LICENSE for licensing information.
