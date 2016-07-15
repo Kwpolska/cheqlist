@@ -16,6 +16,7 @@ import sys
 import io
 import time
 import cheqlist
+from cheqlist import utils
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ('Main',)
@@ -190,47 +191,11 @@ class Main(QtWidgets.QMainWindow):
         return self.tasklist.row(item)
 
     # File handling
-    def serialize(self):
-        """Serialize a list into GitHub Flavored Markdown."""
-        fstr = ' - [{x}] {asterisks}{text}{asterisks}\n'
-        done = 0
-        for i in self.items():
-            asterisks = ''
-            x = 'x' if i.checkState() else ' '
-            f = i.font()
-            if f.bold():
-                asterisks += '**'
-            if f.italic():
-                asterisks += '*'
-            yield fstr.format(x=x, asterisks=asterisks, text=i.text())
-            done += 1
-        cheqlist.log.info("{0} tasks serialized".format(done))
-
     def loadFromText(self, items):
         """Load items from a text file."""
-        for i in items:
-            i = i.strip()
-            if i.startswith(('- ', '* ')):
-                i = i[2:].strip()
-            if i.startswith('['):
-                checked = i[1] in ('x', 'X', '*')
-                i = i[3:].strip()
-            else:
-                checked = False
-            bold = False
-            italic = False
-            if i.startswith(('_**', '*__')):
-                # mixed styles
-                bold = True
-                italic = True
-                i = i[3:-3].strip()
-            if i.startswith(('**', '__')):
-                bold = True
-                i = i[2:-2].strip()
-            if i.startswith(('*', '_')):
-                italic = True
-                i = i[1:-1].strip()
-            self.addItem(i, False, checked, bold, italic)
+
+        for item, checked, bold, italic in utils.parse_lines(items):
+            self.addItem(item, False, checked, bold, italic)
 
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
@@ -326,7 +291,7 @@ class Main(QtWidgets.QMainWindow):
         """Serialize and write into a file."""
         cheqlist.log.info("Saving to file " + fname)
         with io.open(fname, 'w', encoding='utf-8') as fh:
-            fh.writelines(self.serialize())
+            fh.writelines(utils.serialize_qt(self.items()))
 
     def quit(self, event=None):
         """Display a message on quit via Ctrl+Q."""
