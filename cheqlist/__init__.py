@@ -72,6 +72,7 @@ if confhome is None:
 kwdir = os.path.join(confhome, 'kwpolska')
 confdir = os.path.join(kwdir, 'cheqlist')
 confpath = os.path.join(confdir, 'cheqlist.ini')
+logpath = os.path.join(confdir, 'cheqlist.log')
 
 if not os.path.exists(confhome):
     os.mkdir(confhome)
@@ -85,7 +86,7 @@ if not os.path.exists(confdir):
 # Logging configuration
 logging.basicConfig(format='%(asctime)-15s [%(levelname)-7s] '
                     ':%(name)-10s: %(message)s',
-                    filename=os.path.join(confdir, 'cheqlist.log'),
+                    filename=logpath,
                     level=logging.DEBUG)
 log = logging.getLogger('cheqlist')
 console = logging.StreamHandler()
