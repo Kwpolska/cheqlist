@@ -147,13 +147,8 @@ class Main(QtWidgets.QMainWindow):
         self.tasklist.itemChanged.connect(self.updateUI)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
 
-        if len(sys.argv) == 1:
-            # add sample items
-            self.addItem("Item 1")
-            self.addItem("Item 2")
-        else:
-            for a in sys.argv[1:]:
-                self.readFile(a, clear=False)
+        for a in sys.argv[1:]:
+            self.readFile(a, clear=False)
 
         self.setWindowTitle("Cheqlist")
         self.resize(250, 1000)
