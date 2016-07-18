@@ -45,6 +45,11 @@ However, the parser is quite liberal when it comes to reading files.
 It also supports Markdown-style formatting for ``**bold**, *italic*,
 <u>underline</u>, ~~strikeout~~``.
 
+READ MORE
+---------
+
+See the `Cheqlist User’s Guide <https://cheqlist.readthedocs.io/en/latest/users-guide.html>`_ for more details.
+
 COPYRIGHT
 ---------
 Copyright © 2015-2016, Chris Warrick.

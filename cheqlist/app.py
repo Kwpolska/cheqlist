@@ -504,9 +504,8 @@ class Main(QtWidgets.QMainWindow):
         """Show the right-click menu of a task list."""
         pos = self.tasklist.mapToGlobal(point)
         m = QtWidgets.QMenu()
-        if self.tasklist.count() == 0:
-            m.addAction(self.actionAdd)
-        else:
+        m.addAction(self.actionAdd)
+        if self.tasklist.count():
             m.addAction(self.actionEdit)
             m.addAction(self.actionDelete)
             m.addAction(self.actionBold)
