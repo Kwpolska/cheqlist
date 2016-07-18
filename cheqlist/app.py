@@ -105,6 +105,10 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("edit-clear-list"), "Clea&r", self,
             shortcut='Ctrl+R', toolTip="Clear", triggered=self.clear)
 
+        self.actionPasteItems = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("edit-paste"), "&Paste items…", self,
+            shortcut='Ctrl+V', toolTip="Paste items from clipboard",
+            triggered=self.pasteItems)
         self.actionQuit = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
             shortcut='Ctrl+Q', toolTip="Quit", triggered=self.quit)
@@ -148,6 +152,7 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addAction(self.actionEdit)
         self.editMenu.addAction(self.actionDelete)
         self.editMenu.addAction(self.actionClear)
+        self.editMenu.addAction(self.actionPasteItems)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
@@ -389,6 +394,12 @@ class Main(QtWidgets.QMainWindow):
                             utils.config_bool(self.ignoreStruckOut))
         cheqlist.config_write()
         self.updateProgressBar()
+
+    def pasteItems(self, event=None):
+        """Open the paste items dialog box."""
+        pw = PasteWindow(self)
+        if pw.exec():
+            self.loadFromText(pw.textBox.toPlainText().splitlines())
 
     # UI functions and helpers
     def updateBoldAction(self):
