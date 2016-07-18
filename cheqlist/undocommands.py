@@ -228,3 +228,66 @@ class CommandUnStrikeOut(CommandStrikeOut):
 
     prefix = "Remove Strike Out"
     undoValue = True
+
+
+class CommandPatternCheck(QUndoCommand):
+    """Generic Check Pattern command."""
+
+    desc = ""
+    pattern = None
+
+    def __init__(self, window):
+        """Create the action."""
+        self.window = window
+        self.items = {}
+        for i in self.window.items():
+            self.items[id(i)] = i.checkState()
+        super(CommandPatternCheck, self).__init__(self.desc)
+
+    def undo(self):
+        """Undo the command."""
+        self.window.updateUI_disable()
+        for i in self.window.items():
+            self.window.lastState[id(i)] = self.items[id(i)]
+            i.setCheckState(self.items[id(i)])
+        self.window.updateUI_enable()
+
+    def redo(self):
+        """Redo the command."""
+        self.window.updateUI_disable()
+        for i in self.window.items():
+            self.window.lastState[id(i)] = self.pattern
+            i.setCheckState(self.pattern)
+        self.window.updateUI_enable()
+
+
+class CommandCheckAll(CommandPatternCheck):
+    """Check all items."""
+
+    pattern = QtCore.Qt.Checked
+    desc = "Check All"
+
+
+class CommandCheckNone(CommandPatternCheck):
+    """Uncheck all items."""
+
+    pattern = QtCore.Qt.Unchecked
+    desc = "Uncheck All"
+
+
+class CommandCheckInvert(CommandPatternCheck):
+    """Check all items."""
+
+    desc = "Invert Selection"
+
+    def redo(self):
+        """Redo the command."""
+        self.window.updateUI_disable()
+        for i in self.window.items():
+            if self.items[id(i)] == QtCore.Qt.Checked:
+                ns = QtCore.Qt.Unchecked
+            else:
+                ns = QtCore.Qt.Checked
+            self.window.lastState[id(i)] = ns
+            i.setCheckState(ns)
+        self.window.updateUI_enable()

@@ -206,9 +206,6 @@ class Main(QtWidgets.QMainWindow):
         self.tasklist.customContextMenuRequested.connect(
             self.tasklistMenuHandler)
 
-        for a in sys.argv[1:]:
-            self.readFile(a, clear=False)
-
         self.undoWidget = UndoWidget(self.undoStack)
         self.undoWidget.setWindowTitle("Operations — Cheqlist")
         self.undoWidget._mw = self
@@ -218,8 +215,12 @@ class Main(QtWidgets.QMainWindow):
         self.resize(250, 1000)
         self.updateUI()
 
+        for a in sys.argv[1:]:
+            self.readFile(a, clear=False)
+
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
+
         cheqlist.log.info("Startup finished in {0:0.2f} s".format(
                           time.time() - cheqlist._starttime))
 
@@ -282,11 +283,13 @@ class Main(QtWidgets.QMainWindow):
     # File handling
     def loadFromText(self, items, undoable=False):
         """Load items from a text file."""
+        self.updateUI_disable()
         for (item, checked, bold, italic, underline,
              strikeOut) in utils.parse_lines(items):
             self.addItem(item, False, checked, bold, italic, underline,
                          strikeOut, undoable)
 
+        self.updateUI_enable()
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
     # Action handling
@@ -472,23 +475,15 @@ class Main(QtWidgets.QMainWindow):
 
     def checkAll(self, event=None):
         """Check all items (complete the list)."""
-        for item in self.items():
-            item.setCheckState(2)
-        self.updateUI()
+        self.undoStack.push(undocommands.CommandCheckAll(self))
 
     def checkNone(self, event=None):
         """Uncheck all items (reset the list)."""
-        for item in self.items():
-            item.setCheckState(0)
+        self.undoStack.push(undocommands.CommandCheckNone(self))
 
     def checkInvert(self, event=None):
         """Check all unchecked items, uncheck all checked items."""
-        for item in self.items():
-            if item.checkState() == 2:
-                item.setCheckState(0)
-            else:
-                item.setCheckState(2)
-        self.updateUI()
+        self.undoStack.push(undocommands.CommandCheckInvert(self))
 
     def ignoreStruckOutHandler(self, event=None):
         """Toggle the setting that ignores struck out events."""
@@ -619,6 +614,23 @@ class Main(QtWidgets.QMainWindow):
         self.selectionHandler()
         self.updateDisabledButtons()
         self.updateWindowTitle()
+
+    def _updateUI_disabled(self):
+        """Do nothing."""
+        pass
+
+    _updateUI_enabled = updateUI
+
+    def updateUI_disable(self):
+        """Disable the updateUI function for long running operations."""
+        self.progressBar.setMaximum(0)
+        self.progressBar.setValue(0)
+        self.updateUI = self._updateUI_disabled
+
+    def updateUI_enable(self):
+        """Enable the updateUI function after long running operations."""
+        self.updateUI = self._updateUI_enabled
+        self.updateUI()
 
     def selectionHandler(self):
         """Update actions when the selection changes."""
