@@ -1,0 +1,13 @@
+*foo*
+**bar**
+***baz***
+_foo_
+__bar__
+___baz___
+*_foofoo_*
+**__barbar__**
+**_foobar_**
+_**foobar**_
+__*foobar*__
+*__foobar__*
+___*bazfoo*___
