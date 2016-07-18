@@ -66,7 +66,7 @@ class Main(QtWidgets.QMainWindow):
         menu = self.menuBar()
         self.fileMenu = menu.addMenu("&File")
         self.editMenu = menu.addMenu("&Edit")
-        # self.helpMenu = menu.addMenu("&Help")
+        self.helpMenu = menu.addMenu("&Help")
 
         self.actionAdd = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("list-add"), "&Add", self, shortcut='Ctrl+T',
@@ -143,6 +143,14 @@ class Main(QtWidgets.QMainWindow):
             "struck out from counts", triggered=self.ignoreStruckOutHandler,
             checkable=True)
 
+        self.actionUsersGuide = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("help-contents"), "User’s &Guide…", self,
+            toolTip="Open the Cheqlist User’s Guide", triggered=self.usersGuide)
+
+        self.actionAbout = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("help-about"), "&About Cheqlist…", self,
+            toolTip="Open the Cheqlist About window", triggered=self.aboutWindow)
+
         self.actionUndo = self.undoStack.createUndoAction(self)
         self.actionUndo.setIcon(QtGui.QIcon.fromTheme("edit-undo"))
         self.actionUndo.setShortcut("Ctrl+Z")
@@ -198,6 +206,9 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addAction(self.actionCheckInvert)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionIgnoreStruckOut)
+
+        self.helpMenu.addAction(self.actionUsersGuide)
+        self.helpMenu.addAction(self.actionAbout)
 
         self.tasklist.itemChanged.connect(self.itemChangedHandler)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
@@ -498,6 +509,19 @@ class Main(QtWidgets.QMainWindow):
         pw = PasteWindow(self)
         if pw.exec():
             self.loadFromText(pw.textBox.toPlainText().splitlines())
+
+    def usersGuide(self, event=None):
+        """Open the User’s Guide."""
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(
+            "https://cheqlist.readthedocs.io/en/latest/users-guide.html"))
+
+    def aboutWindow(self, event=None):
+        QtWidgets.QMessageBox.about(
+            self, "Cheqlist v{0}".format(cheqlist.__version__),
+            "Cheqlist v{0}\nA simple Qt checklist.\n"
+            "Copyright © 2015-2016, Chris Warrick. All rights reserved.\n"
+            "Licensed under the 3-clause BSD license.".format(
+                cheqlist.__version__))
 
     # UI functions and helpers
     def tasklistMenuHandler(self, point):
