@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.2.0
+# Cheqlist v0.3.0
 # A simple Qt checklist.
 # Copyright © 2015-2016, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -16,21 +16,28 @@ import sys
 import io
 import time
 import cheqlist
-from cheqlist import utils
+from cheqlist import utils, undocommands
+from cheqlist.undowidget import UndoWidget
+from cheqlist.pastewindow import PasteWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ('Main',)
 
 
 class Main(QtWidgets.QMainWindow):
-
     """The main window of the app."""
 
     def __init__(self, app):
         """Create the GUI."""
         super(Main, self).__init__()
         self.app = app
-        self.ignoreStruckOut = cheqlist.config.getboolean('settings', 'ignore_struck_out')
+        self.filename = None
+        self.filebasename = None
+        self.lastText = {}
+        self.lastState = {}
+        self.ignoreStruckOut = cheqlist.config.getboolean(
+            'settings', 'ignore_struck_out')
+        self.undoStack = QtWidgets.QUndoStack(self)
 
         self.centralwidget = QtWidgets.QWidget(self)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -94,16 +101,26 @@ class Main(QtWidgets.QMainWindow):
             triggered=self.strikeOutItemHandler)
 
         self.actionOpen = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("document-open"), "&Open", self,
+            QtGui.QIcon.fromTheme("document-open"), "&Open…", self,
             shortcut='Ctrl+O', toolTip="Open", triggered=self.openHandler)
 
         self.actionSave = QtWidgets.QAction(
-            QtGui.QIcon.fromTheme("document-save"), "&Save", self,
+            QtGui.QIcon.fromTheme("document-save"), "&Save…", self,
             shortcut='Ctrl+S', toolTip="Save", triggered=self.saveHandler)
+
+        self.actionSaveAs = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("document-save-as"), "S&ave as…", self,
+            shortcut='Ctrl+Shift+S', toolTip="Save as",
+            triggered=self.saveAsHandler)
 
         self.actionClear = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("edit-clear-list"), "Clea&r", self,
             shortcut='Ctrl+R', toolTip="Clear", triggered=self.clear)
+
+        self.actionPasteItems = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("edit-paste"), "&Paste items…", self,
+            shortcut='Ctrl+V', toolTip="Paste items from clipboard",
+            triggered=self.pasteItems)
 
         self.actionQuit = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("application-exit"), "&Quit", self,
@@ -126,11 +143,24 @@ class Main(QtWidgets.QMainWindow):
             "struck out from counts", triggered=self.ignoreStruckOutHandler,
             checkable=True)
 
+        self.actionUndo = self.undoStack.createUndoAction(self)
+        self.actionUndo.setIcon(QtGui.QIcon.fromTheme("edit-undo"))
+        self.actionUndo.setShortcut("Ctrl+Z")
+        self.actionRedo = self.undoStack.createRedoAction(self)
+        self.actionRedo.setIcon(QtGui.QIcon.fromTheme("edit-redo"))
+        self.actionRedo.setShortcut("Ctrl+Y")
+
+        self.actionShowUndoWindow = QtWidgets.QAction(
+            "Show undo &window", self, toolTip="Show undo window with all "
+            "operations performed", triggered=self.showUndoWindowHandler,
+            checkable=True)
+
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
+        self.toolBar.addAction(self.actionSaveAs)
         self.toolBar.addAction(self.actionClear)
         self.toolBar.addAction(self.actionQuit)
 
@@ -138,9 +168,13 @@ class Main(QtWidgets.QMainWindow):
         self.editToolBar.addAction(self.actionItalic)
         self.editToolBar.addAction(self.actionUnderline)
         self.editToolBar.addAction(self.actionStrikeOut)
+        self.editToolBar.addSeparator()
+        self.editToolBar.addAction(self.actionUndo)
+        self.editToolBar.addAction(self.actionRedo)
 
         self.fileMenu.addAction(self.actionOpen)
         self.fileMenu.addAction(self.actionSave)
+        self.fileMenu.addAction(self.actionSaveAs)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.actionQuit)
 
@@ -148,11 +182,16 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addAction(self.actionEdit)
         self.editMenu.addAction(self.actionDelete)
         self.editMenu.addAction(self.actionClear)
+        self.editMenu.addAction(self.actionPasteItems)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionBold)
         self.editMenu.addAction(self.actionItalic)
         self.editMenu.addAction(self.actionUnderline)
         self.editMenu.addAction(self.actionStrikeOut)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionUndo)
+        self.editMenu.addAction(self.actionRedo)
+        self.editMenu.addAction(self.actionShowUndoWindow)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionCheckAll)
         self.editMenu.addAction(self.actionCheckNone)
@@ -160,23 +199,28 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionIgnoreStruckOut)
 
-        self.tasklist.itemChanged.connect(self.updateUI)
+        self.tasklist.itemChanged.connect(self.itemChangedHandler)
         self.tasklist.itemSelectionChanged.connect(self.selectionHandler)
         self.actionIgnoreStruckOut.setChecked(self.ignoreStruckOut)
         self.tasklist.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.tasklist.customContextMenuRequested.connect(
             self.tasklistMenuHandler)
 
-        for a in sys.argv[1:]:
-            self.readFile(a, clear=False)
+        self.undoWidget = UndoWidget(self.undoStack)
+        self.undoWidget.setWindowTitle("Operations — Cheqlist")
+        self.undoWidget._mw = self
 
         self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
-        self.setWindowTitle("Cheqlist")
+        self.updateWindowTitle()
         self.resize(250, 1000)
         self.updateUI()
 
+        for a in sys.argv[1:]:
+            self.readFile(a, clear=False)
+
         QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
+
         cheqlist.log.info("Startup finished in {0:0.2f} s".format(
                           time.time() - cheqlist._starttime))
 
@@ -186,16 +230,24 @@ class Main(QtWidgets.QMainWindow):
         for n in range(0, self.tasklist.count()):
             yield self.tasklist.item(n)
 
-    def clear(self, event=None):
+    def clear(self, event=None, undoable=True):
         """Clear the task list."""
-        self.tasklist.clear()
+        if undoable:
+            self.undoStack.push(undocommands.CommandClear(self))
+        else:
+            self.tasklist.clear()
+            self.undoStack.clear()
+            self.lastText = {}
+            self.lastState = {}
         cheqlist.log.info("List cleared")
         self.updateUI()
 
     def addItem(self, text="New item", edit=False, checked=False, bold=False,
-                italic=False, underline=False, strikeOut=False):
+                italic=False, underline=False, strikeOut=False, undoable=True):
         """Add an item to the task list."""
         item = QtWidgets.QListWidgetItem(text, self.tasklist)
+        if not edit:
+            self.lastText[id(item)] = text
         item.setFlags(QtCore.Qt.ItemIsSelectable |
                       QtCore.Qt.ItemIsEditable |
                       QtCore.Qt.ItemIsDragEnabled |
@@ -206,7 +258,7 @@ class Main(QtWidgets.QMainWindow):
             item.setCheckState(QtCore.Qt.Checked)
         else:
             item.setCheckState(QtCore.Qt.Unchecked)
-        self.tasklist.addItem(item)
+        self.lastState[id(item)] = item.checkState()
         f = item.font()
         if bold:
             f.setBold(True)
@@ -218,20 +270,26 @@ class Main(QtWidgets.QMainWindow):
             f.setStrikeOut(True)
         item.setFont(f)
         if edit:
+            self.tasklist.addItem(item)
             item.setSelected(True)
             self.tasklist.editItem(item)
+        elif undoable:
+            self.undoStack.push(undocommands.CommandAdd(item, self))
+        else:
+            self.tasklist.addItem(item)
         self.updateUI()
         return self.tasklist.row(item)
 
     # File handling
-    def loadFromText(self, items):
+    def loadFromText(self, items, undoable=False):
         """Load items from a text file."""
-
+        self.updateUI_disable()
         for (item, checked, bold, italic, underline,
              strikeOut) in utils.parse_lines(items):
             self.addItem(item, False, checked, bold, italic, underline,
-                         strikeOut)
+                         strikeOut, undoable)
 
+        self.updateUI_enable()
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
     # Action handling
@@ -247,7 +305,7 @@ class Main(QtWidgets.QMainWindow):
     def delItemHandler(self, event):
         """Delete the currently selected item."""
         for i in self.tasklist.selectedItems():
-            self.tasklist.takeItem(self.tasklist.row(i))
+            self.undoStack.push(undocommands.CommandDelete(i, self))
         self.updateUI()
 
     def updateProgressBar(self):
@@ -267,38 +325,36 @@ class Main(QtWidgets.QMainWindow):
         self.progressBar.setMaximum(count)
         self.progressBar.setValue(done)
 
+    def _formatItemHandler(self, attrName, commandName):
+        for i in self.tasklist.selectedItems():
+            if getattr(i.font(), attrName)():
+                className = 'CommandUn' + commandName
+            else:
+                className = 'Command' + commandName
+            self.undoStack.push(getattr(undocommands, className)(i, self))
+
     def boldItemHandler(self, event):
         """Toggle bold on an item."""
-        for i in self.tasklist.selectedItems():
-            f = i.font()
-            f.setBold(not f.bold())
-            i.setFont(f)
+        self._formatItemHandler('bold', 'Bold')
 
     def italicItemHandler(self, event):
         """Toggle italic on an item."""
-        for i in self.tasklist.selectedItems():
-            f = i.font()
-            f.setItalic(not f.italic())
-            i.setFont(f)
+        self._formatItemHandler('italic', 'Italic')
 
     def underlineItemHandler(self, event):
         """Toggle underline on an item."""
-        for i in self.tasklist.selectedItems():
-            f = i.font()
-            f.setUnderline(not f.underline())
-            i.setFont(f)
+        self._formatItemHandler('underline', 'Underline')
 
     def strikeOutItemHandler(self, event):
         """Toggle strike out on an item."""
-        for i in self.tasklist.selectedItems():
-            f = i.font()
-            f.setStrikeOut(not f.strikeOut())
-            i.setFont(f)
-        if self.ignoreStruckOut:
-            self.updateProgressBar()
+        self._formatItemHandler('strikeOut', 'StrikeOut')
 
     def openHandler(self, event):
         """Open a file."""
+        # Ask for unsaved changes first
+        if not self.unsavedChanges():
+            return
+
         openmode = cheqlist.config.get('directories', 'open_from')
         lastdir = cheqlist.config.get('directories', 'lastdir')
         path = os.path.expanduser(cheqlist.config.get('directories', openmode))
@@ -321,12 +377,22 @@ class Main(QtWidgets.QMainWindow):
         """Read a file and load it."""
         cheqlist.log.info("Opening file " + fname)
         if clear:
-            self.clear()
+            self.clear(undoable=False)
         with io.open(fname, 'r', encoding='utf-8') as fh:
             self.loadFromText(fh.readlines())
+        self.filename = fname
+        self.filebasename = os.path.basename(self.filename)
+        self.updateWindowTitle()
 
     def saveHandler(self, event):
         """Save a file."""
+        if self.filename:
+            self.writeFile(self.filename)
+        else:
+            self.saveAsHandler(event)
+
+    def saveAsHandler(self, event):
+        """Save as a new file."""
         openmode = cheqlist.config.get('directories', 'open_from')
         lastdir = cheqlist.config.get('directories', 'lastdir')
         path = os.path.expanduser(cheqlist.config.get('directories', openmode))
@@ -350,37 +416,74 @@ class Main(QtWidgets.QMainWindow):
         cheqlist.log.info("Saving to file " + fname)
         with io.open(fname, 'w', encoding='utf-8') as fh:
             fh.writelines(utils.serialize_qt(self.items()))
+        self.filename = fname
+        self.filebasename = os.path.basename(fname)
+        self.undoStack.clear()
+        self.updateUI()
+
+    def showUndoWindowHandler(self, event=None):
+        """Show/hide the Undo window."""
+        self.undoWidget.setVisible(not self.undoWidget.isVisible())
 
     def quit(self, event=None):
         """Display a message on quit via Ctrl+Q."""
-        cheqlist.log.info("*** Goodbye!")
-        QtWidgets.qApp.quit()
+        if self.unsavedChanges():
+            cheqlist.log.info("*** Goodbye!")
+            QtWidgets.qApp.quit()
+        else:
+            cheqlist.log.info("Aborted quit")
 
     def closeEvent(self, event=None):
         """Display a message on quit via the X button."""
-        cheqlist.log.info("*** Goodbye!")
-        super(Main, self).closeEvent(event)
-        QtWidgets.qApp.quit()
+        if self.unsavedChanges():
+            cheqlist.log.info("*** Goodbye!")
+            # super(Main, self).closeEvent(event)
+            self.undoWidget.hide()
+            event.accept()
+            QtWidgets.qApp.quit()
+        else:
+            cheqlist.log.info("Aborted quit")
+            event.ignore()
+
+    def unsavedChanges(self):
+        """If there are unsaved changes, ask the user if they want to save."""
+        if not self.undoStack.isClean():
+            if self.filename:
+                msg = "List \"{0}\" has been modified.".format(
+                    self.filebasename)
+            else:
+                msg = "The list has been modified."
+            msgBox = QtWidgets.QMessageBox(self)
+            msgBox.setWindowTitle("Cheqlist")
+            msgBox.setText(msg)
+            msgBox.setInformativeText("Do you want to save your changes?")
+            msgBox.setIcon(QtWidgets.QMessageBox.Question)
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Save |
+                                      QtWidgets.QMessageBox.Discard |
+                                      QtWidgets.QMessageBox.Cancel)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.Save)
+            ret = msgBox.exec()
+            if ret == QtWidgets.QMessageBox.Save:
+                self.saveHandler(None)
+                return True
+            elif ret == QtWidgets.QMessageBox.Discard:
+                return True
+            elif ret == QtWidgets.QMessageBox.Cancel:
+                return False
+        else:
+            return True
 
     def checkAll(self, event=None):
         """Check all items (complete the list)."""
-        for item in self.items():
-            item.setCheckState(2)
-        self.updateUI()
+        self.undoStack.push(undocommands.CommandCheckAll(self))
 
     def checkNone(self, event=None):
         """Uncheck all items (reset the list)."""
-        for item in self.items():
-            item.setCheckState(0)
+        self.undoStack.push(undocommands.CommandCheckNone(self))
 
     def checkInvert(self, event=None):
         """Check all unchecked items, uncheck all checked items."""
-        for item in self.items():
-            if item.checkState() == 2:
-                item.setCheckState(0)
-            else:
-                item.setCheckState(2)
-        self.updateUI()
+        self.undoStack.push(undocommands.CommandCheckInvert(self))
 
     def ignoreStruckOutHandler(self, event=None):
         """Toggle the setting that ignores struck out events."""
@@ -390,7 +493,68 @@ class Main(QtWidgets.QMainWindow):
         cheqlist.config_write()
         self.updateProgressBar()
 
+    def pasteItems(self, event=None):
+        """Open the paste items dialog box."""
+        pw = PasteWindow(self)
+        if pw.exec():
+            self.loadFromText(pw.textBox.toPlainText().splitlines())
+
     # UI functions and helpers
+    def tasklistMenuHandler(self, point):
+        """Show the right-click menu of a task list."""
+        pos = self.tasklist.mapToGlobal(point)
+        m = QtWidgets.QMenu()
+        if self.tasklist.count() == 0:
+            m.addAction(self.actionAdd)
+        else:
+            m.addAction(self.actionEdit)
+            m.addAction(self.actionDelete)
+            m.addAction(self.actionBold)
+            m.addAction(self.actionItalic)
+            m.addAction(self.actionUnderline)
+            m.addAction(self.actionStrikeOut)
+        m.exec(pos)
+
+    def cleanChanged(self, clean):
+        """Update the window title to reflect that the window is dirty."""
+        self.updateWindowTitle()
+
+    def updateWindowTitle(self):
+        """Set the appropriate window title (file name, dirty status)."""
+        if self.filename and self.undoStack.isClean():
+            self.setWindowTitle("{0} — Cheqlist".format(self.filebasename))
+        elif self.filename:
+            self.setWindowTitle("{0} * — Cheqlist".format(self.filebasename))
+        else:
+            self.setWindowTitle("Cheqlist")
+
+    def itemChangedHandler(self, item):
+        """Handle item changes."""
+        try:
+            lt = self.lastText[id(item)]
+            it = item.text()
+            if lt is None and it:
+                # Text added
+                self.undoStack.push(undocommands.CommandAdd(item, self))
+            elif lt is not None and it != lt:
+                # Item text changed, let’s make this an edit action
+                self.undoStack.push(undocommands.CommandEdit(
+                    item, self, lt, it))
+        except KeyError:
+            self.lastText[id(item)] = None
+
+        cs = item.checkState()
+        try:
+            ls = self.lastState[id(item)]
+            if ls != cs and cs == QtCore.Qt.Checked:
+                self.undoStack.push(undocommands.CommandCheck(item, self))
+            elif ls != cs and cs == QtCore.Qt.Unchecked:
+                self.undoStack.push(undocommands.CommandUnCheck(item, self))
+        except KeyError:
+            # lastState is set only after checkState is set
+            pass
+        self.updateUI()
+
     def updateBoldAction(self):
         """Set the bold action check status."""
         s = False
@@ -449,6 +613,24 @@ class Main(QtWidgets.QMainWindow):
         self.updateProgressBar()
         self.selectionHandler()
         self.updateDisabledButtons()
+        self.updateWindowTitle()
+
+    def _updateUI_disabled(self):
+        """Do nothing."""
+        pass
+
+    _updateUI_enabled = updateUI
+
+    def updateUI_disable(self):
+        """Disable the updateUI function for long running operations."""
+        self.progressBar.setMaximum(0)
+        self.progressBar.setValue(0)
+        self.updateUI = self._updateUI_disabled
+
+    def updateUI_enable(self):
+        """Enable the updateUI function after long running operations."""
+        self.updateUI = self._updateUI_enabled
+        self.updateUI()
 
     def selectionHandler(self):
         """Update actions when the selection changes."""
@@ -456,19 +638,3 @@ class Main(QtWidgets.QMainWindow):
         self.updateItalicAction()
         self.updateUnderlineAction()
         self.updateStrikeOutAction()
-
-
-    def tasklistMenuHandler(self, point):
-        """Show the right-click menu of a task list."""
-        pos = self.tasklist.mapToGlobal(point)
-        m = QtWidgets.QMenu()
-        if self.tasklist.count() == 0:
-            m.addAction(self.actionAdd)
-        else:
-            m.addAction(self.actionEdit)
-            m.addAction(self.actionDelete)
-            m.addAction(self.actionBold)
-            m.addAction(self.actionItalic)
-            m.addAction(self.actionUnderline)
-            m.addAction(self.actionStrikeOut)
-        m.exec(pos)

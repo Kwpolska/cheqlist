@@ -1,6 +1,6 @@
 
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.2.0
+# Cheqlist v0.3.0
 # A simple Qt checklist.
 # Copyright © 2015-2016, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -13,47 +13,60 @@ Utilties, mainly for parsing and file support.
 """
 
 import cheqlist
+import re
 
 SERIALIZE_FSTR = ' - [{x}] {markers}{text}{end_markers}\n'
 zwnj = '\u200C'
 
+RE_X = re.compile(r'\[([ *xX])\] ?(.*)')
+RE_FMT = re.compile(r'^((?:\*|_|~~|<u>)*)(.*?)((?:\*|_|~~|</u>)*)$')
+RE_BOLD = re.compile(r'(\*\*|__)(.*?)\1')
+RE_ITALIC = re.compile(r'(\*|_)(.*?)\1')
+RE_UNDERLINE = re.compile(r'(<u>)(.*?)(</u>)')
+RE_STRIKEOUT = re.compile(r'(~~)(.*?)(~~)')
+
+
+def _re_match(regex, line):
+    """Match a regular expression and substitute it."""
+    out = regex.sub(r'\2', line)
+    return line != out, out
+
 
 def parse_lines(lines):
     """Parse lines into entries."""
-    for line in lines:
-        line = line.strip()
+    for lineO in lines:
+        line = lineO.strip()
         if line.startswith(('- ', '* ')):
             line = line[2:].strip()
-        if line.startswith('['):
-            checked = line[1] in ('x', 'X', '*')
-            line = line[3:].strip()
+        match = RE_X.match(line)
+        if match:
+            checked_text, line = match.groups()
+            checked = checked_text != ' '
         else:
             checked = False
+
         bold = False
         italic = False
         underline = False
         strikeOut = False
-        if line.startswith('<u>'):
-            underline = True
-            line = line[3:-4].strip()
-        if line.startswith('~~'):
-            strikeOut = True
-            line = line[2:-2].strip()
-        if line.startswith(('_**', '*__')):
-            # mixed styles
-            bold = True
-            italic = True
-            line = line[3:-3].strip()
-        if line.startswith(('**', '__')):
-            bold = True
-            line = line[2:-2].strip()
-        if line.startswith(('*', '_')):
-            italic = True
-            line = line[1:-1].strip()
+        match = RE_FMT.match(line)
+        if match:
+            fmt_start, line, fmt_end = match.groups()
+            fmt = fmt_start + 'f' + fmt_end
+            bold, fmt = _re_match(RE_BOLD, fmt)
+            italic, fmt = _re_match(RE_ITALIC, fmt)
+            underline, fmt = _re_match(RE_UNDERLINE, fmt)
+            strikeOut, fmt = _re_match(RE_STRIKEOUT, fmt)
 
-        # Remove ZWNJ (see below)
-        if line[0] == zwnj:
-            line = line[1:].strip()
+            if fmt != 'f':
+                cheqlist.log.warn(
+                    "Failed to parse formats: %r left over from %r (%r; %d%d%d%d)",
+                    fmt, lineO, line, bold, italic, underline, strikeOut)
+
+            # Remove ZWNJ (see below)
+            if line[0] == zwnj:
+                line = line[1:-1]
+            line = line.strip()
 
         yield (line, checked, bold, italic, underline, strikeOut)
 
@@ -82,8 +95,9 @@ def serialize_qt(items, log=True):
         # Add ZWNJ to preserve non-markup text characters
         text = i.text()
         if text.startswith(('*', '~~', '<u>', '_')):
-            text = zwnj + text
-        yield SERIALIZE_FSTR.format(x=x, markers=markers, end_markers=end_markers, text=text)
+            text = zwnj + text + zwnj
+        yield SERIALIZE_FSTR.format(x=x, markers=markers,
+                                    end_markers=end_markers, text=text)
         done += 1
     if log:
         cheqlist.log.info("{0} tasks serialized".format(done))

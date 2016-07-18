@@ -5,8 +5,8 @@ Appendix C. Changelog
 :Author: Chris Warrick <chris@chriswarrick.com>
 :Copyright: © 2015-2016, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
-:Date: 2016-07-15
-:Version: 0.2.0
+:Date: 2016-07-18
+:Version: 0.3.0
 
 .. index:: CHANGELOG
 
@@ -18,6 +18,13 @@ More information can be found on GitHub in the `releases section
 
 Version History
 ===============
+
+0.3.0
+    * More resilient, regex-based input parser
+    * Full file support (remembers file names, save on quit if changes made etc.)
+    * Undo/redo capability for all operations
+    * Better performance of large lists (patterns, opening)
+    * Ability to paste tasks/insert from text (Ctrl+V)
 
 0.2.0
     * Display exceptions in message boxes

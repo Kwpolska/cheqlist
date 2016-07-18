@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.2.0
+# Cheqlist v0.3.0
 # A simple Qt checklist.
 # Copyright © 2015-2016, Chris Warrick.
 # See /LICENSE for licensing information.
@@ -22,10 +22,8 @@ __all__ = ('main',)
 def main():
     """The main routine for the UI."""
     try:
-        # if '-h' in sys.argv or '--help' in sys.argv:
         app = QtWidgets.QApplication(sys.argv)
-        main = Main(app)
-        main  # because vim python-mode doesn't like NOQA
+        main = Main(app)  # NOQA
         sys.exit(app.exec_())
     except Exception as e:
         log.exception(e)
