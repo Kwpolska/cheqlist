@@ -15,7 +15,7 @@ This is a simple checklist application, written in PyQt5.
 SCREENSHOT
 ----------
 
-.. image:: https://github.com/Kwpolska/cheqlist/raw/develop/screenshot.png
+.. image:: https://github.com/Kwpolska/cheqlist/raw/master/screenshot.png
    :alt: Cheqlist
    :align: center
 
