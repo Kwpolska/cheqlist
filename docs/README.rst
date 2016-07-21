@@ -12,6 +12,13 @@ PURPOSE
 
 This is a simple checklist application, written in PyQt5.
 
+SCREENSHOT
+----------
+
+.. image:: https://github.com/Kwpolska/cheqlist/raw/develop/screenshot.png
+   :alt: Cheqlist
+   :align: center
+
 INSTALLATION
 ------------
 
@@ -33,7 +40,15 @@ GitHub Flavored Markdown is the usual file format::
     - [ ] unchecked
     - [x] checked
 
+
 However, the parser is quite liberal when it comes to reading files.
+It also supports Markdown-style formatting for ``**bold**, *italic*,
+<u>underline</u>, ~~strikeout~~``.
+
+READ MORE
+---------
+
+See the `Cheqlist User’s Guide <https://cheqlist.readthedocs.io/en/latest/users-guide.html>`_ for more details.
 
 COPYRIGHT
 ---------
