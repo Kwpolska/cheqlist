@@ -40,10 +40,12 @@ A simple Qt checklist.
 """
 
 import os
+import sys
 import pkg_resources
 import io
 import logging
 import time
+import appdirs
 try:
     import configparser
 except ImportError:
@@ -65,23 +67,26 @@ _starttime = time.time()
 # _ = G.gettext
 
 # Config directory setup
-confhome = os.getenv('XDG_CONFIG_HOME')
-if confhome is None:
-    confhome = os.path.expanduser('~/.config/')
+if sys.platform == 'darwin':
+    confdir = os.path.expanduser('~/Library/Application Support/Cheqlist')
+else:
+    if sys.platform == 'win32':
+        confhome = os.path.normpath(appdirs._get_win_folder("CSIDL_LOCAL_APPDATA"))
+    else:
+        confhome = os.getenv('XDG_CONFIG_HOME') or os.path.expanduser('~/.config/')
 
-kwdir = os.path.join(confhome, 'kwpolska')
-confdir = os.path.join(kwdir, 'cheqlist')
-confpath = os.path.join(confdir, 'cheqlist.ini')
-logpath = os.path.join(confdir, 'cheqlist.log')
+    kwdir = os.path.join(confhome, 'kwpolska')
+    confdir = os.path.join(kwdir, 'cheqlist')
 
-if not os.path.exists(confhome):
-    os.mkdir(confhome)
-
-if not os.path.exists(kwdir):
-    os.mkdir(kwdir)
+    for d in (confhome, kwdir):
+        if not os.path.exists(d):
+            os.mkdir(d)
 
 if not os.path.exists(confdir):
     os.mkdir(confdir)
+
+confpath = os.path.join(confdir, 'cheqlist.ini')
+logpath = os.path.join(confdir, 'cheqlist.log')
 
 # Logging configuration
 logging.basicConfig(format='%(asctime)-15s [%(levelname)-7s] '
