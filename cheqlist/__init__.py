@@ -45,7 +45,7 @@ import pkg_resources
 import io
 import logging
 import time
-import appdirs
+from cheqlist import appdirs
 try:
     import configparser
 except ImportError:
