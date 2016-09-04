@@ -222,6 +222,7 @@ class Main(QtWidgets.QMainWindow):
         self.undoWidget._mw = self
 
         self.setWindowIcon(QtGui.QIcon.fromTheme("checkbox"))
+        self.setUnifiedTitleAndToolBarOnMac(True)
         self.updateWindowTitle()
         self.resize(250, 1000)
         self.updateUI()
