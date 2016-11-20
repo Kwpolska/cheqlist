@@ -15,9 +15,10 @@ things might not work properly or natively.
 
 Arch Linux users can use the ``cheqlist`` package from the AUR. Users of other
 Linux distributions need to install it themselves; PyQt5 packages should be
-available in OS repositories. macOS users can install ``pyqt5`` from Homebrew
-(with Python 3) to satisfy all dependencies. Windows users can use installers
-provided by Python, Qt and PyQt5.
+available in OS repositories. macOS users can install ``python3`` from
+Homebrew, ``pip`` for that Python manually and ``pyqt5`` from pip (in a
+virtualenv, or with ``pip install --user``) to satisfy all dependencies.
+Windows users can use installers provided by Python, Qt and PyQt5.
 
 Main Window
 ===========
@@ -40,6 +41,8 @@ taken and what is saved to files. Opening or saving a file links Cheqlist to
 that file (further *Save* operations won’t ask for a file name). Closing
 Cheqlist with unsaved changes will prompt to save them.
 
+Mac users: Replace Ctrl with ⌘ Command and Alt with ⌥ Option.
+
 Formatting
 ----------
 
@@ -48,6 +51,8 @@ There are four formatting options available: bold (:kbd:`Ctrl+B`), italic
 Bold, italic, and underline have no meaning to the application (they are for
 decoration only). Strike out has no meaning unless *Ignore struck out tasks* is
 enabled from the *Edit* menu (saved in configuration between sessions).
+
+Pressing :kbd:`Ctrl+Up` and :kbd:`Ctrl+Down` moves items up and down on the list.
 
 Undo, Redo, Undo Window
 -----------------------
