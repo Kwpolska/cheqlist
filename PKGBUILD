@@ -1,7 +1,7 @@
 # Maintainer: Chris Warrick <aur@chriswarrick.com>
 pkgname=cheqlist
 _pyname=cheqlist
-pkgver=0.3.0
+pkgver=0.3.1
 pkgrel=1
 pkgdesc='A simple Qt checklist.'
 arch=('any')
