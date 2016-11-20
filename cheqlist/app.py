@@ -117,6 +117,13 @@ class Main(QtWidgets.QMainWindow):
             QtGui.QIcon.fromTheme("edit-clear-list"), "Clea&r", self,
             shortcut='Ctrl+R', toolTip="Clear", triggered=self.clear)
 
+        self.actionMoveUp = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("go-up"), "&Move up", self,
+            shortcut='Ctrl+Up', toolTip="Move up", triggered=self.moveUp)
+        self.actionMoveDown = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme("go-down"), "Move dow&n", self,
+            shortcut='Ctrl+Down', toolTip="Move down", triggered=self.moveDown)
+
         self.actionPasteItems = QtWidgets.QAction(
             QtGui.QIcon.fromTheme("edit-paste"), "&Paste items…", self,
             shortcut='Ctrl+V', toolTip="Paste items from clipboard",
@@ -196,6 +203,9 @@ class Main(QtWidgets.QMainWindow):
         self.editMenu.addAction(self.actionItalic)
         self.editMenu.addAction(self.actionUnderline)
         self.editMenu.addAction(self.actionStrikeOut)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.actionMoveUp)
+        self.editMenu.addAction(self.actionMoveDown)
         self.editMenu.addSeparator()
         self.editMenu.addAction(self.actionUndo)
         self.editMenu.addAction(self.actionRedo)
@@ -517,12 +527,21 @@ class Main(QtWidgets.QMainWindow):
             "https://cheqlist.readthedocs.io/en/latest/users-guide.html"))
 
     def aboutWindow(self, event=None):
+        """Display the About window."""
         QtWidgets.QMessageBox.about(
             self, "Cheqlist v{0}".format(cheqlist.__version__),
             "Cheqlist v{0}\nA simple Qt checklist.\n"
             "Copyright © 2015-2016, Chris Warrick. All rights reserved.\n"
             "Licensed under the 3-clause BSD license.".format(
                 cheqlist.__version__))
+
+    def moveUp(self, event=None):
+        """Move the selected item up one row."""
+        self.moveHandler(-1, 0)
+
+    def moveDown(self, event=None):
+        """Move the selected item down one row."""
+        self.moveHandler(1, self.tasklist.count() - 1)
 
     # UI functions and helpers
     def tasklistMenuHandler(self, point):
@@ -662,3 +681,13 @@ class Main(QtWidgets.QMainWindow):
         self.updateItalicAction()
         self.updateUnderlineAction()
         self.updateStrikeOutAction()
+
+    def moveHandler(self, difference, finalPosition):
+        """Handle a move operation."""
+        row = self.tasklist.currentRow()
+        if row == finalPosition:
+            return
+
+        item = self.tasklist.takeItem(row)
+        self.tasklist.insertItem(row + difference, item)
+        self.tasklist.setCurrentItem(item)

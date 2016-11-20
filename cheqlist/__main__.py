@@ -23,6 +23,7 @@ def main():
     """The main routine for the UI."""
     try:
         app = QtWidgets.QApplication(sys.argv)
+        app.setApplicationName("Cheqlist")
         main = Main(app)  # NOQA
         sys.exit(app.exec_())
     except Exception as e:
