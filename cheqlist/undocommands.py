@@ -99,7 +99,7 @@ class CommandEdit(QUndoCommand):
         self.desc = ' '.join((self.prefix, newText))
         self.oldText = oldText
         self.newText = newText
-        super(QUndoCommand, self).__init__(self.desc)
+        super(CommandEdit, self).__init__(self.desc)
 
     def undo(self):
         """Undo the command."""

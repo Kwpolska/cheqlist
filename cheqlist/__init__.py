@@ -57,7 +57,7 @@ __author__ = 'Chris Warrick'
 __license__ = '3-clause BSD'
 __docformat__ = 'restructuredtext en'
 
-__all__ = ('main',)
+__all__ = ()
 
 # Time
 _starttime = time.time()
