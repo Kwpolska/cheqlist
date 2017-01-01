@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 # Cheqlist v0.3.1
 # A simple Qt checklist.
-# Copyright © 2015-2016, Chris Warrick.
+# Copyright © 2015-2017, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 The Cheqlist app.
 
-:Copyright: © 2015-2016, Chris Warrick.
+:Copyright: © 2015-2017, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -531,7 +531,7 @@ class Main(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(
             self, "Cheqlist v{0}".format(cheqlist.__version__),
             "Cheqlist v{0}\nA simple Qt checklist.\n"
-            "Copyright © 2015-2016, Chris Warrick. All rights reserved.\n"
+            "Copyright © 2015-2017, Chris Warrick. All rights reserved.\n"
             "Licensed under the 3-clause BSD license.".format(
                 cheqlist.__version__))
 

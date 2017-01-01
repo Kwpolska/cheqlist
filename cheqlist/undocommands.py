@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 # Cheqlist v0.3.1
 # A simple Qt checklist.
-# Copyright © 2015-2016, Chris Warrick.
+# Copyright © 2015-2017, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 Undo commands for Cheqlist.
 
-:Copyright: © 2015-2016, Chris Warrick.
+:Copyright: © 2015-2017, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 

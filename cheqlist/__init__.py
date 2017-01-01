@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 # Cheqlist v0.3.1
 # A simple Qt checklist.
-# Copyright © 2015-2016, Chris Warrick.
+# Copyright © 2015-2017, Chris Warrick.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 """
 A simple Qt checklist.
 
-:Copyright: © 2015-2016, Chris Warrick.
+:Copyright: © 2015-2017, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
