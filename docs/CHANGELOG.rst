@@ -3,7 +3,7 @@ Appendix C. Changelog
 =====================
 :Info: This is the changelog for Cheqlist.
 :Author: Chris Warrick <chris@chriswarrick.com>
-:Copyright: © 2015-2017, Chris Warrick.
+:Copyright: © 2015-2018, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
 :Date: 2016-11-20
 :Version: 0.3.1

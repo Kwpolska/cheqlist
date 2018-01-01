@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 # Cheqlist v0.3.1
 # A simple Qt checklist.
-# Copyright © 2015-2017, Chris Warrick.
+# Copyright © 2015-2018, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 The Cheqlist app.
 
-:Copyright: © 2015-2017, Chris Warrick.
+:Copyright: © 2015-2018, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -22,6 +22,10 @@ from cheqlist.pastewindow import PasteWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ('Main',)
+
+
+PBAR_FORMAT_QT = "%v/%m (%p%)"
+PBAR_FORMAT_PY = "%d/%d (%d%%)"
 
 
 class Main(QtWidgets.QMainWindow):
@@ -48,7 +52,7 @@ class Main(QtWidgets.QMainWindow):
         self.verticalLayout.addWidget(self.tasklist)
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setTextVisible(True)
-        self.progressBar.setFormat("%v/%m (%p%)")
+        self.progressBar.setFormat(PBAR_FORMAT_QT)
         self.updateProgressBar()
         self.verticalLayout.addWidget(self.progressBar)
         self.setCentralWidget(self.centralwidget)
@@ -346,6 +350,11 @@ class Main(QtWidgets.QMainWindow):
                     done += 1
         self.progressBar.setMaximum(count)
         self.progressBar.setValue(done)
+        try:
+            percent = done/count * 100
+        except ZeroDivisionError:
+            percent = 0
+        self.progressBar.setToolTip(PBAR_FORMAT_PY % (done, count, percent))
 
     def _formatItemHandler(self, attrName, commandName):
         for i in self.tasklist.selectedItems():
@@ -531,7 +540,7 @@ class Main(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(
             self, "Cheqlist v{0}".format(cheqlist.__version__),
             "Cheqlist v{0}\nA simple Qt checklist.\n"
-            "Copyright © 2015-2017, Chris Warrick. All rights reserved.\n"
+            "Copyright © 2015-2018, Chris Warrick. All rights reserved.\n"
             "Licensed under the 3-clause BSD license.".format(
                 cheqlist.__version__))
 
