@@ -1,14 +1,14 @@
 
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.3.1
+# Cheqlist v0.3.2
 # A simple Qt checklist.
-# Copyright © 2015-2018, Chris Warrick.
+# Copyright © 2015-2019, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 Utilties, mainly for parsing and file support.
 
-:Copyright: © 2015-2018, Chris Warrick.
+:Copyright: © 2015-2019, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 

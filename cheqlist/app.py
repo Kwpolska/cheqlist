@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.3.1
+# Cheqlist v0.3.2
 # A simple Qt checklist.
-# Copyright © 2015-2018, Chris Warrick.
+# Copyright © 2015-2019, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 The Cheqlist app.
 
-:Copyright: © 2015-2018, Chris Warrick.
+:Copyright: © 2015-2019, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -19,7 +19,21 @@ import cheqlist
 from cheqlist import utils, undocommands
 from cheqlist.undowidget import UndoWidget
 from cheqlist.pastewindow import PasteWindow
-from PyQt5 import QtCore, QtGui, QtWidgets
+try:
+    from PySide2 import QtCore, QtGui, QtWidgets
+    import PySide2
+    CHEQLIST_BACKEND = "PySide2"
+    BACKEND_VERSION = PySide2.__version__
+    QT_VERSION = QtCore.__version__
+except ImportError:
+    from PyQt5 import QtCore, QtGui, QtWidgets
+    import PyQt5.Qt
+    CHEQLIST_BACKEND = "PyQt5"
+    BACKEND_VERSION = PyQt5.Qt.PYQT_VERSION_STR
+    QT_VERSION = PyQT5.Qt.QT_VERSION_STR
+
+CHEQLIST_BACKEND_STR = '{0} v{1}, Qt v{2}'.format(
+        CHEQLIST_BACKEND, BACKEND_VERSION, QT_VERSION)
 
 __all__ = ('Main',)
 
@@ -34,6 +48,7 @@ class Main(QtWidgets.QMainWindow):
     def __init__(self, app):
         """Create the GUI."""
         super(Main, self).__init__()
+        cheqlist.log.info("Backend: " + CHEQLIST_BACKEND_STR)
         self.app = app
         self.filename = None
         self.filebasename = None
@@ -188,7 +203,7 @@ class Main(QtWidgets.QMainWindow):
         self.editToolBar.addAction(self.actionUnderline)
         self.editToolBar.addAction(self.actionStrikeOut)
         self.editToolBar.addSeparator()
-        self.editToolBar.addAction(self.actionUndo)
+
         self.editToolBar.addAction(self.actionRedo)
 
         self.fileMenu.addAction(self.actionOpen)
@@ -319,16 +334,16 @@ class Main(QtWidgets.QMainWindow):
         cheqlist.log.info("{0} tasks loaded".format(len(items)))
 
     # Action handling
-    def addItemHandler(self, event):
+    def addItemHandler(self, event=None):
         """Add an empty item."""
         self.addItem('', True)
 
-    def editItemHandler(self, event):
+    def editItemHandler(self, event=None):
         """Edit the currently selected item."""
         for i in self.tasklist.selectedItems():
             self.tasklist.editItem(i)
 
-    def delItemHandler(self, event):
+    def delItemHandler(self, event=None):
         """Delete the currently selected item."""
         for i in self.tasklist.selectedItems():
             self.undoStack.push(undocommands.CommandDelete(i, self))
@@ -364,23 +379,23 @@ class Main(QtWidgets.QMainWindow):
                 className = 'Command' + commandName
             self.undoStack.push(getattr(undocommands, className)(i, self))
 
-    def boldItemHandler(self, event):
+    def boldItemHandler(self, event=None):
         """Toggle bold on an item."""
         self._formatItemHandler('bold', 'Bold')
 
-    def italicItemHandler(self, event):
+    def italicItemHandler(self, event=None):
         """Toggle italic on an item."""
         self._formatItemHandler('italic', 'Italic')
 
-    def underlineItemHandler(self, event):
+    def underlineItemHandler(self, event=None):
         """Toggle underline on an item."""
         self._formatItemHandler('underline', 'Underline')
 
-    def strikeOutItemHandler(self, event):
+    def strikeOutItemHandler(self, event=None):
         """Toggle strike out on an item."""
         self._formatItemHandler('strikeOut', 'StrikeOut')
 
-    def openHandler(self, event):
+    def openHandler(self, event=None):
         """Open a file."""
         # Ask for unsaved changes first
         if not self.unsavedChanges():
@@ -415,14 +430,14 @@ class Main(QtWidgets.QMainWindow):
         self.filebasename = os.path.basename(self.filename)
         self.updateWindowTitle()
 
-    def saveHandler(self, event):
+    def saveHandler(self, event=None):
         """Save a file."""
         if self.filename:
             self.writeFile(self.filename)
         else:
             self.saveAsHandler(event)
 
-    def saveAsHandler(self, event):
+    def saveAsHandler(self, event=None):
         """Save as a new file."""
         openmode = cheqlist.config.get('directories', 'open_from')
         lastdir = cheqlist.config.get('directories', 'lastdir')
@@ -540,9 +555,9 @@ class Main(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(
             self, "Cheqlist v{0}".format(cheqlist.__version__),
             "Cheqlist v{0}\nA simple Qt checklist.\n"
-            "Copyright © 2015-2018, Chris Warrick. All rights reserved.\n"
-            "Licensed under the 3-clause BSD license.".format(
-                cheqlist.__version__))
+            "Copyright © 2015-2019, Chris Warrick. All rights reserved.\n"
+            "Licensed under the 3-clause BSD license.\nUsing {1}".format(
+                cheqlist.__version__, CHEQLIST_BACKEND_STR))
 
     def moveUp(self, event=None):
         """Move the selected item up one row."""

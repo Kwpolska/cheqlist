@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.3.1
+# Cheqlist v0.3.2
 # A simple Qt checklist.
-# Copyright © 2015-2018, Chris Warrick.
+# Copyright © 2015-2019, Chris Warrick.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 """
 A simple Qt checklist.
 
-:Copyright: © 2015-2018, Chris Warrick.
+:Copyright: © 2015-2019, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
@@ -52,7 +52,7 @@ except ImportError:
     import ConfigParser as configparser
 
 __title__ = 'Cheqlist'
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 __author__ = 'Chris Warrick'
 __license__ = '3-clause BSD'
 __docformat__ = 'restructuredtext en'

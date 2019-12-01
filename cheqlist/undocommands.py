@@ -1,18 +1,22 @@
 # -*- encoding: utf-8 -*-
-# Cheqlist v0.3.1
+# Cheqlist v0.3.2
 # A simple Qt checklist.
-# Copyright © 2015-2018, Chris Warrick.
+# Copyright © 2015-2019, Chris Warrick.
 # See /LICENSE for licensing information.
 
 """
 Undo commands for Cheqlist.
 
-:Copyright: © 2015-2018, Chris Warrick.
+:Copyright: © 2015-2019, Chris Warrick.
 :License: BSD (see /LICENSE).
 """
 
-from PyQt5.QtWidgets import QUndoCommand
-from PyQt5 import QtCore
+try:
+    from PySide2.QtWidgets import QUndoCommand
+    from PySide2 import QtCore
+except ImportError:
+    from PyQt5.QtWidgets import QUndoCommand
+    from PyQt5 import QtCore
 
 __all__ = ('CommandAdd', 'CommandDelete', 'CommandClear', 'CommandCheck',
            'CommandUnCheck', 'CommandBold', 'CommandUnBold', 'CommandItalic',

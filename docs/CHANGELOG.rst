@@ -3,10 +3,10 @@ Appendix C. Changelog
 =====================
 :Info: This is the changelog for Cheqlist.
 :Author: Chris Warrick <chris@chriswarrick.com>
-:Copyright: © 2015-2018, Chris Warrick.
+:Copyright: © 2015-2019, Chris Warrick.
 :License: BSD (see /LICENSE or :doc:`Appendix B <LICENSE>`.)
-:Date: 2016-11-20
-:Version: 0.3.1
+:Date: 2019-12-01
+:Version: 0.3.2
 
 .. index:: CHANGELOG
 
@@ -18,6 +18,10 @@ More information can be found on GitHub in the `releases section
 
 Version History
 ===============
+
+0.3.2
+    * PySide2 support
+    * PySide2 is now the main backend, PyQt5 is still supported (but not recommended)
 
 0.3.1
     * Add Move Up and Move Down commands (Ctrl+Up, Ctrl+Down)

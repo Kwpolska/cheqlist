@@ -3,14 +3,15 @@ Cheqlist.  A simple Qt checklist.
 =================================
 :Info: This is the README file for Cheqlist.
 :Author: Chris Warrick <chris@chriswarrick.com>
-:Copyright: © 2015-2018, Chris Warrick.
-:Date: 2016-11-20
-:Version: 0.3.1
+:Copyright: © 2015-2019, Chris Warrick.
+:Date: 2019-12-01
+:Version: 0.3.2
 
 PURPOSE
 -------
 
-This is a simple checklist application, written in PyQt5.
+This is a simple checklist application, written in Qt and Python.
+Both PySide2 and PyQt5 are supported, but PySide2 is preferred.
 
 SCREENSHOT
 ----------
@@ -24,9 +25,9 @@ INSTALLATION
 
 ::
 
-    pip install cheqlist
+    pip install cheqlist pyside2
 
-Make sure you have PyQt5 installed.  AUR package also available.
+An AUR package also available.
 
 If you are on Linux, run::
 
@@ -52,7 +53,7 @@ See the `Cheqlist User’s Guide <https://cheqlist.readthedocs.io/en/latest/user
 
 COPYRIGHT
 ---------
-Copyright © 2015-2018, Chris Warrick.
+Copyright © 2015-2019, Chris Warrick.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
