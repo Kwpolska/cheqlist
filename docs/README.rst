@@ -3,7 +3,7 @@ Cheqlist.  A simple Qt checklist.
 =================================
 :Info: This is the README file for Cheqlist.
 :Author: Chris Warrick <chris@chriswarrick.com>
-:Copyright: © 2015-2019, Chris Warrick.
+:Copyright: © 2015-2020, Chris Warrick.
 :Date: 2019-12-01
 :Version: 0.3.2
 
@@ -53,7 +53,7 @@ See the `Cheqlist User’s Guide <https://cheqlist.readthedocs.io/en/latest/user
 
 COPYRIGHT
 ---------
-Copyright © 2015-2019, Chris Warrick.
+Copyright © 2015-2020, Chris Warrick.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
